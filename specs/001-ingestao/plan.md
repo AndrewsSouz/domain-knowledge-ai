@@ -162,6 +162,14 @@ Dois detalhes importantes:
 - `claimForProcessing` aceita `PROCESSING` por causa do RF6 (aplicação caiu
   no meio, mensagem reentregue).
 
+Na implementação, as seis transições usam um `UPDATE` só no
+`DocumentRepository` (`transition(id, from, to, errorMessage, now)`), que
+sempre escreve o `error_message`: ele só existe em `FAILED`, e toda saída de
+`FAILED` limpa o erro. Os métodos do `DocumentLifecycle` devolvem `boolean`
+(valeu ou não) e quem chama decide o que fazer. O `register` traduz a
+violação do `unique` de `sha256` (`document_sha256_key`) em
+`DuplicateDocumentException`. O horário vem de um bean `Clock` (`shared`).
+
 ## 6. Upload, passo a passo (`DocumentUploadService`)
 
 1. Arquivo vazio → `EmptyFileException`. O tamanho máximo é barrado antes,
@@ -179,7 +187,8 @@ Dois detalhes importantes:
 5. `id = UUID.randomUUID()`, `storageKey = documents/{id}/v1/original.{pdf|docx}`.
 6. `ObjectStorage.put` (com o SHA-256 nos metadados do objeto).
 7. `DocumentLifecycle.register` → `RECEIVED`. Se outra requisição gravou o
-   mesmo hash no meio tempo (violação do `unique`), trata como duplicado.
+   mesmo hash no meio tempo, vem `DuplicateDocumentException` e trata como
+   duplicado.
 8. `IngestionProducer.publish(event)` e espera o *ack* do Kafka (timeout de
    5 s). Falhou → `EventPublishException` → `503`, documento fica `RECEIVED`.
 9. `markQueued` → `Accepted`.
