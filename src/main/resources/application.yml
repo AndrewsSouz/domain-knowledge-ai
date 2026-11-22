@@ -8,6 +8,11 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      # RF1: até 20 MB por arquivo; a requisição inteira tem folga pro título.
+      max-file-size: 20MB
+      max-request-size: 21MB
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dka}
     username: ${POSTGRES_USER:dka}
@@ -34,6 +39,13 @@ spring:
         max.block.ms: 5000
         request.timeout.ms: 3000
         delivery.timeout.ms: 5000
+
+server:
+  tomcat:
+    # Acima do limite, a aplicação responde 413, mas o Tomcat ainda precisa ler
+    # (e descartar) o resto do corpo pra o cliente receber a resposta; com o
+    # padrão de 2 MB ele corta a conexão e o cliente não vê o 413.
+    max-swallow-size: 25MB
 
 # Storage S3 dos originais (RustFS no ambiente local).
 storage:

@@ -39,7 +39,7 @@ outbox, DLQ, nova versão de documento, interface web.
 - Tipos aceitos: **PDF e DOCX**, detectados pelo conteúdo, não só pela
   extensão.
 - Tamanho máximo: 20 MB (ajustável).
-- Resposta `202 Accepted` com `documentId`, `version`, `status` e o link pro
+- Resposta `202 Accepted` com o `id` do documento, `version`, `status` e o link pro
   `GET`.
 - Tipo não aceito → `415`; arquivo vazio ou grande demais → `400`/`413`;
   erros no formato *Problem Details* (RFC 9457, padrão do Spring).

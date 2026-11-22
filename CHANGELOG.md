@@ -31,3 +31,6 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 - Upload (`DocumentUploadService`): tipo pelo conteúdo, SHA-256 em stream,
   duplicado devolve o existente ou reenfileira (`RECEIVED`/`FAILED`), grava
   no storage, registra e publica.
+- API `POST /v1/documents` (202 novo ou reenfileirado, 200 duplicado),
+  `GET /v1/documents/{id}` e `GET /v1/documents` paginado com filtro por
+  status; erros em Problem Details (400, 404, 413, 415, 503).

@@ -8,7 +8,7 @@ Boot** (ADR 0002), não serviços separados. O esboço inicial está em
 
 | Componente | Lado | Responsabilidade |
 | --- | --- | --- |
-| `DocumentController` | síncrono | `POST/GET /v1/documents`. Recebe, delega, traduz o resultado em HTTP. |
+| `DocumentUploadController` + `DocumentController` | síncrono | `POST /v1/documents` (upload) e `GET /v1/documents` (leitura). Recebem, delegam, traduzem o resultado em HTTP. |
 | `DocumentUploadService` | síncrono | Orquestra o upload: valida, calcula o hash, trata duplicado, grava no storage, registra, publica. |
 | `IngestionProducer` | síncrono | Só publica o evento no Kafka. Não toca no banco. |
 | `IngestionConsumer` | assíncrono | Só recebe o evento e delega. Não toca no banco. |
@@ -37,7 +37,7 @@ Regras que guiam o desenho:
 
 ```mermaid
 flowchart LR
-    client([Cliente]) -->|"POST /v1/documents"| ctrl[DocumentController]
+    client([Cliente]) -->|"POST /v1/documents"| ctrl[DocumentUploadController]
     ctrl --> up[DocumentUploadService]
     up -->|"1. put original"| s3i[S3Integration]
     s3i --> s3[(RustFS / S3)]
@@ -69,7 +69,7 @@ desenhados separados só pra mostrar os dois papéis.
 sequenceDiagram
     autonumber
     participant C as Cliente
-    participant API as DocumentController
+    participant API as DocumentUploadController
     participant U as DocumentUploadService
     participant S3 as S3Integration
     participant DB as DocumentRepository
@@ -90,7 +90,7 @@ sequenceDiagram
         U->>DB: insert status=RECEIVED
         U->>P: publish DocumentUploadedEvent
         U->>DB: status=QUEUED
-        U-->>C: 202 {documentId, status: QUEUED}
+        U-->>C: 202 + Location {id, status: QUEUED}
     end
 ```
 

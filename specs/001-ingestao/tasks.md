@@ -49,9 +49,9 @@ Fim do bloco: upload grava no storage, no banco e publica no Kafka.
 - [x] T302 (43bcbb6) `DocumentUploadedEvent`, tópico `document-uploaded` (`NewTopic`),
   `IngestionProducer` com espera do ack. Teste: evento no tópico com chave =
   `documentId`.
-- [~] T303 `DocumentUploadService` com o fluxo do plan §6 (duplicado,
+- [x] T303 (c2b1559) `DocumentUploadService` com o fluxo do plan §6 (duplicado,
   reenfileirar, falha na publicação) e o `UploadResult` selado. **A1, A3.**
-- [ ] T304 `DocumentController` (`POST`, `GET` por id, `GET` paginado) e
+- [~] T304 `DocumentController` (`POST`, `GET` por id, `GET` paginado) e
   `ApiExceptionHandler` com Problem Details. **A4, A7.**
 
 ## T4 — Consumo

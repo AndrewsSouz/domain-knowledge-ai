@@ -62,7 +62,7 @@ conforme aparecem:
 | `service` | regras, orquestração e interfaces que o resto da aplicação usa | `document.service.DocumentLifecycle`, `infrastructure.storage.service.ObjectStorage` |
 | `integration` | clientes de sistemas externos (o `*Integration` do esboço) | `infrastructure.storage.integration.S3Integration` |
 | `messaging` | producer e consumer do Kafka de um domínio | `ingestion.messaging.IngestionProducer` |
-| `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController` |
+| `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController`, `ingestion.controller.DocumentUploadController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
 | `health` | indicadores do `/actuator/health` | `infrastructure.storage.health.StorageHealthIndicator` |
 
@@ -74,7 +74,7 @@ seguida na escrita e conferida na revisão.
 
 | Esboço (`docs/diagramas/`) | Classe | Pacote | O que faz |
 | --- | --- | --- | --- |
-| `/v1/ingest` | `DocumentController` | `document` | `POST/GET /v1/documents`. Fino: recebe, chama o serviço, traduz o resultado em HTTP. |
+| `/v1/ingest` | `DocumentUploadController` + `DocumentController` | `ingestion` + `document` | `POST /v1/documents` no `ingestion`, `GET` no `document`. Dois controllers no mesmo caminho: um só ficaria no `document` dependendo do `ingestion`, que já depende do `document` (ciclo entre pacotes). Finos: recebem, chamam o serviço, traduzem o resultado em HTTP. |
 | `IngestionQueueFacade` | `DocumentUploadService` | `ingestion` | Orquestra o upload: valida, calcula o hash, trata duplicado, grava no storage, registra, publica. Vira serviço porque faz mais do que "mandar pra fila". |
 | `IngestionProducer` | `IngestionProducer` | `ingestion` | Só publica o `DocumentUploadedEvent`. Não toca no banco. |
 | Kafka | tópico `document-uploaded` | — | 3 partições, chave = `documentId`. |
@@ -119,11 +119,28 @@ record DocumentResponse(UUID id, String title, String originalFilename,
     DocumentStatus status, String errorMessage, Instant createdAt, Instant updatedAt) {}
 ```
 
-Problem Details: `spring.mvc.problemdetails.enabled=true` + um
-`@RestControllerAdvice` (`ApiExceptionHandler`) para as exceções do domínio:
-`EmptyFileException` → 400, `UnsupportedDocumentTypeException` → 415,
-`MaxUploadSizeExceededException` → 413, `DocumentNotFoundException` → 404,
-`EventPublishException` → 503.
+Problem Details: `ApiExceptionHandler` (`shared.controller`), um
+`@RestControllerAdvice` que estende o `ResponseEntityExceptionHandler` do
+Spring. A classe mãe já devolve Problem Details pras exceções do Spring MVC
+(parâmetro inválido, parte do multipart faltando, validação), então a
+propriedade `spring.mvc.problemdetails.enabled` não é necessária. As do
+domínio: `EmptyFileException` → 400, `UnsupportedDocumentTypeException` →
+415, `MaxUploadSizeExceededException` → 413, `DocumentNotFoundException` →
+404, `EventPublishException` → 503 (com `documentId`), `StorageException`
+→ 503.
+
+Na implementação (T304):
+
+- Listagem em `PagedModel` do Spring Data (`content` + `page`), formato
+  estável; ordem `createdAt desc` com `id` de desempate; `size` de 1 a 100,
+  `page` a partir de 0; fora disso, 400. A ordenação não vem do cliente.
+- `title` com até 255 caracteres; nome do arquivo sem caminho e cortado em
+  255.
+- Limite de upload: `spring.servlet.multipart.max-file-size=20MB`
+  (`max-request-size=21MB`). `server.tomcat.max-swallow-size=25MB`: acima do
+  limite o Tomcat ainda lê e descarta o resto do corpo pra o cliente receber
+  o 413; com o padrão de 2 MB a conexão é cortada (*Broken pipe*), conferido
+  na T304.
 
 ## 5. Banco e ciclo de vida
 
@@ -362,6 +379,10 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   página) e `sample.docx` (pacote OOXML mínimo), os dois com o mesmo texto
   curto e extraível; `fake.pdf` (texto com extensão `.pdf`); `empty.pdf`
   (0 bytes). Menos de 1 KB cada.
+- `@IntegrationTest` sobe o servidor numa porta aleatória
+  (`RANDOM_PORT`): o limite de upload só aparece passando pelo Tomcat de
+  verdade, que o MockMvc não usa. Os `@WebMvcTest` cobrem o mapeamento de
+  cada caso pra HTTP com os serviços como dublê.
 - `support/TopicReader` lê um tópico do começo com um grupo novo e devolve
   as mensagens de uma chave; depois de achar o esperado, continua lendo 2 s
   pra pegar mensagem a mais (é assim que o A3 prova "um evento só").

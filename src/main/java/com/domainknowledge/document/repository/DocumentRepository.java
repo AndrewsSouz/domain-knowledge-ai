@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +20,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Optional<Document> findBySha256(String sha256);
+
+    Page<Document> findByStatus(DocumentStatus status, Pageable pageable);
 
     /**
      * Muda o status só se o documento estiver num dos estados de origem.

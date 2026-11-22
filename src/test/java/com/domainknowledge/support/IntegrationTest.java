@@ -9,11 +9,12 @@ import org.springframework.context.annotation.Import;
 
 /**
  * Teste de integração: contexto Spring completo com Postgres, Kafka e storage
- * S3 de verdade, em containers.
+ * S3 de verdade, em containers, e o servidor HTTP numa porta aleatória (o
+ * limite de upload só é testável passando pelo Tomcat de verdade).
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
 public @interface IntegrationTest {
 }
