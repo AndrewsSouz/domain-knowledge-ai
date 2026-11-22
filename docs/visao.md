@@ -29,9 +29,20 @@ colega, abre chamado ou faz errado.
 
 ## Corpus de demonstração
 
-Uma empresa fictícia (uma rede de farmácias inventada) com 10 a 20 documentos
-curtos escritos pra demo: política de férias, procedimento de troca de
-produto, manual do PDV, código de conduta.
+O produto é genérico; o corpus é só a demonstração. A demo usa as
+**Comprehensive Rules de Magic: The Gathering**, as regras oficiais e
+públicas do jogo, que a Wizards of the Coast publica em PDF e DOCX:
+
+- é um documento real e longo (centenas de páginas), não um texto de
+  brinquedo escrito pra demo;
+- as regras são numeradas (`702.19b`), então a fonte de cada resposta fica
+  precisa;
+- dá pra montar perguntas com resposta conhecida e medir a qualidade das
+  respostas (fatia 5).
+
+O arquivo não é versionado: a demo baixa do site oficial (uso não comercial,
+conforme a Fan Content Policy da Wizards). Os testes automáticos usam
+arquivos pequenos com texto próprio.
 
 ## Fora de escopo (até a 1.0.0)
 

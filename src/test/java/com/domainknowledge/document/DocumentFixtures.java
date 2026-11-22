@@ -5,7 +5,7 @@ import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Dados de teste para documentos (empresa fictícia). */
+/** Dados de teste para documentos. */
 public final class DocumentFixtures {
 
     private DocumentFixtures() {

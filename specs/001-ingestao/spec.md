@@ -122,7 +122,7 @@ Automáticos (viram teste):
 Demo (roteiro manual):
 
 - **D1** Do zero: `docker compose up -d`, `./gradlew bootRun`, upload de um
-  PDF pelo `docs/demo.http`, ver `QUEUED` virar `INDEXED` no `GET` e o
+  PDF (as Comprehensive Rules, `docs/visao.md`) pelo `docs/demo.http`, ver `QUEUED` virar `INDEXED` no `GET` e o
   arquivo no console do RustFS.
 - **D2** Derrubar a aplicação com documento na fila, subir de novo e ver o
   documento terminar (o Kafka guardou a mensagem).

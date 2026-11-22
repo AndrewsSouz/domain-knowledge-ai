@@ -22,6 +22,8 @@ Cada fatia termina em algo que roda ponta a ponta e vira um MINOR. Testes,
 
 ## Backlog
 
+- Endpoint só de busca (`POST /v1/search`): devolve os trechos com o score,
+  pra outro sistema montar o próprio prompt com o próprio LLM.
 - Busca híbrida (texto + vetor) e reranking.
 - OCR pra PDF escaneado.
 - Página web simples pra upload e pergunta.

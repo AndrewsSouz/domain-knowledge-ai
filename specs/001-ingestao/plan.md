@@ -321,7 +321,7 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
 - Tempo medido na T004: ≈ 40 s pra subir os três containers, uma vez por
   execução.
 - Fixtures em `src/test/resources/fixtures/`: `sample.pdf` e `sample.docx`
-  pequenos, com texto da empresa fictícia; `fake.pdf` (texto com extensão
+  pequenos, com texto próprio; `fake.pdf` (texto com extensão
   `.pdf`); `empty.pdf`.
 - Em máquina com pouca RAM: rodar os testes de integração com o `docker compose`
   parado.
