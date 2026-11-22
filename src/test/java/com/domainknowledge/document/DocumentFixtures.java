@@ -1,21 +1,22 @@
 package com.domainknowledge.document;
 
+import com.domainknowledge.document.model.NewDocument;
 import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Dados de teste para documentos (empresa fictícia). */
-final class DocumentFixtures {
+public final class DocumentFixtures {
 
     private DocumentFixtures() {
     }
 
     /** PDF novo com hash aleatório, pra não colidir no {@code unique}. */
-    static NewDocument newDocument() {
+    public static NewDocument newDocument() {
         return newDocument(randomSha256());
     }
 
-    static NewDocument newDocument(String sha256) {
+    public static NewDocument newDocument(String sha256) {
         UUID id = UUID.randomUUID();
         return NewDocument.builder()
                 .id(id)
@@ -28,7 +29,7 @@ final class DocumentFixtures {
                 .build();
     }
 
-    static String randomSha256() {
+    public static String randomSha256() {
         byte[] bytes = new byte[32];
         ThreadLocalRandom.current().nextBytes(bytes);
         return HexFormat.of().formatHex(bytes);

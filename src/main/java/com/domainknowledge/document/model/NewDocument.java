@@ -1,4 +1,4 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.model;
 
 import java.util.UUID;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.model;
 
 /**
  * Onde o documento está no pipeline. As transições válidas ficam no

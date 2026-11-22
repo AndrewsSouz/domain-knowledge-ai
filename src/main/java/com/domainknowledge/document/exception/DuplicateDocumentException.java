@@ -1,4 +1,4 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.exception;
 
 import lombok.Getter;
 

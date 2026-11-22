@@ -1,4 +1,4 @@
-package com.domainknowledge.shared;
+package com.domainknowledge.shared.config;
 
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;

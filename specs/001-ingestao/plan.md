@@ -46,9 +46,21 @@ domain-knowledge-ai/
     └── test/java/com/domainknowledge/ (mesmos pacotes + support/)
 ```
 
-Pacote base `com.domainknowledge` (ajustável). Regra do ADR 0002: um pacote
-não usa o repositório de outro. `ingestion` e `indexing` mudam status só pelo
-`DocumentLifecycle`.
+Pacote base `com.domainknowledge`. Dentro de cada capacidade, subpacotes por
+papel da classe, criados conforme aparecem:
+
+| Subpacote | O que vai | Exemplo |
+| --- | --- | --- |
+| `model` | entidades, enums, records de dados | `document.model.Document`, `NewDocument` |
+| `exception` | exceções do domínio | `document.exception.DuplicateDocumentException` |
+| `repository` | Spring Data | `document.repository.DocumentRepository` |
+| `service` | regras e orquestração | `document.service.DocumentLifecycle` |
+| `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController` |
+| `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
+
+Regra do ADR 0002: um pacote não usa o repositório de outro. `ingestion` e
+`indexing` mudam status só pelo `DocumentLifecycle`. É convenção de código,
+seguida na escrita e conferida na revisão.
 
 ## 3. Do esboço inicial para as classes
 

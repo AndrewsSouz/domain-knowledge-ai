@@ -1,4 +1,4 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +23,7 @@ import org.springframework.data.domain.Persistable;
 
 /**
  * Documento enviado pela API. Só leitura do lado da aplicação: o status muda
- * por {@code UPDATE} condicional no {@link DocumentRepository}, chamado pelo
+ * por {@code UPDATE} condicional no {@code DocumentRepository}, chamado pelo
  * {@code DocumentLifecycle}. Por isso a entidade não tem setters.
  *
  * <p>O builder é privado: todo documento nasce por {@link #received}, que
@@ -78,7 +78,7 @@ public class Document implements Persistable<UUID> {
     private boolean isNew = true;
 
     /** Documento novo, em {@link DocumentStatus#RECEIVED}. */
-    static Document received(NewDocument data, Instant now) {
+    public static Document received(NewDocument data, Instant now) {
         // O Postgres guarda microssegundos; truncar evita diferença ao reler.
         Instant at = now.truncatedTo(ChronoUnit.MICROS);
         return Document.builder()

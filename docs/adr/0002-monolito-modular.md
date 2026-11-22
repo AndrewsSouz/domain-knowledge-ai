@@ -26,5 +26,5 @@ acessa o repositório de outro direto, só pelo serviço público dele.
 
 - O Kafka e os pacotes já deixam o corte pronto: separar o worker de
   indexação vira uma mudança de deploy, não de código.
-- Dá pra validar os limites entre pacotes com teste de arquitetura (ArchUnit
-  ou Spring Modulith) mais adiante.
+- Os limites entre pacotes são convenção de código (subpacotes por papel,
+  descritos no plan da spec 001), seguida na escrita e conferida na revisão.

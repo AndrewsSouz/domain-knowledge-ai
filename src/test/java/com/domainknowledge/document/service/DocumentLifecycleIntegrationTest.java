@@ -1,15 +1,20 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.service;
 
-import static com.domainknowledge.document.DocumentStatus.FAILED;
-import static com.domainknowledge.document.DocumentStatus.INDEXED;
-import static com.domainknowledge.document.DocumentStatus.PROCESSING;
-import static com.domainknowledge.document.DocumentStatus.QUEUED;
-import static com.domainknowledge.document.DocumentStatus.RECEIVED;
+import static com.domainknowledge.document.model.DocumentStatus.FAILED;
+import static com.domainknowledge.document.model.DocumentStatus.INDEXED;
+import static com.domainknowledge.document.model.DocumentStatus.PROCESSING;
+import static com.domainknowledge.document.model.DocumentStatus.QUEUED;
+import static com.domainknowledge.document.model.DocumentStatus.RECEIVED;
 import static com.domainknowledge.document.DocumentFixtures.newDocument;
 import static com.domainknowledge.document.DocumentFixtures.randomSha256;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.domainknowledge.document.exception.DuplicateDocumentException;
+import com.domainknowledge.document.model.Document;
+import com.domainknowledge.document.model.DocumentStatus;
+import com.domainknowledge.document.model.NewDocument;
+import com.domainknowledge.document.repository.DocumentRepository;
 import com.domainknowledge.support.IntegrationTest;
 import java.sql.Timestamp;
 import java.time.Instant;

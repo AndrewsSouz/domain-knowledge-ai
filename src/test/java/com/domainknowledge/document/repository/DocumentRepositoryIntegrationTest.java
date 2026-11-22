@@ -1,10 +1,13 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.repository;
 
 import static com.domainknowledge.document.DocumentFixtures.newDocument;
 import static com.domainknowledge.document.DocumentFixtures.randomSha256;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.domainknowledge.document.model.Document;
+import com.domainknowledge.document.model.DocumentStatus;
+import com.domainknowledge.document.model.NewDocument;
 import com.domainknowledge.support.IntegrationTest;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;

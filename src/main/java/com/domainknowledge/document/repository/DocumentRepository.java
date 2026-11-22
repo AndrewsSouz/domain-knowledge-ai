@@ -1,4 +1,7 @@
-package com.domainknowledge.document;
+package com.domainknowledge.document.repository;
+
+import com.domainknowledge.document.model.Document;
+import com.domainknowledge.document.model.DocumentStatus;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -10,9 +13,9 @@ import org.springframework.data.jpa.repository.Query;
 
 /**
  * Acesso à tabela {@code document}. Só o pacote {@code document} usa (ADR
- * 0002); os outros pacotes passam pelo {@link DocumentLifecycle}.
+ * 0002); os outros pacotes passam pelo {@code DocumentLifecycle}.
  */
-interface DocumentRepository extends JpaRepository<Document, UUID> {
+public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Optional<Document> findBySha256(String sha256);
 
