@@ -61,6 +61,7 @@ conforme aparecem:
 | `repository` | Spring Data | `document.repository.DocumentRepository` |
 | `service` | regras, orquestração e interfaces que o resto da aplicação usa | `document.service.DocumentLifecycle`, `infrastructure.storage.service.ObjectStorage` |
 | `integration` | clientes de sistemas externos (o `*Integration` do esboço) | `infrastructure.storage.integration.S3Integration` |
+| `messaging` | producer e consumer do Kafka de um domínio | `ingestion.messaging.IngestionProducer` |
 | `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
 | `health` | indicadores do `/actuator/health` | `infrastructure.storage.health.StorageHealthIndicator` |
@@ -243,6 +244,20 @@ arquivo) nunca acontece.
 record DocumentUploadedEvent(UUID eventId, String eventType, Instant occurredAt,
     UUID documentId, int version, String storageKey, String contentType, String sha256) {}
 ```
+
+Na implementação (T302):
+
+- O evento (`ingestion.model`) é o contrato entre o upload e a indexação:
+  guarda o nome do tópico (`DocumentUploadedEvent.TOPIC`) e é montado a partir
+  do `Document` por `DocumentUploadedEvent.of(document, now)`.
+- Serializador `JacksonJsonSerializer` (Spring Kafka 4, Jackson 3), com
+  `spring.json.add.type.headers=false`. Datas em ISO-8601, como no exemplo da
+  arquitetura §5.
+- Kafka fora do ar não pode prender a requisição: `max.block.ms=5000` (achar
+  o broker), `request.timeout.ms=3000`, `delivery.timeout.ms=5000`
+  (confirmar). O `IngestionProducer` espera o *ack* com um teto de 12 s, só
+  como rede de segurança, e traduz qualquer falha em `EventPublishException`
+  com o `documentId`.
 
 ## 8. Indexação (`DocumentIndexingService`)
 

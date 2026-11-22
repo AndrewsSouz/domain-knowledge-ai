@@ -26,3 +26,5 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   do bucket na subida.
 - Storage no `/actuator/health` (`StorageHealthIndicator`).
 - Detecção do tipo de arquivo pelo conteúdo (PDF e DOCX, com Tika).
+- Evento `DocumentUploadedEvent` no tópico `document-uploaded` (3
+  partições, chave = `documentId`), publicado com confirmação do Kafka.

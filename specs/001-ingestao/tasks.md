@@ -43,10 +43,10 @@ vazio passa com os três containers.
 
 Fim do bloco: upload grava no storage, no banco e publica no Kafka.
 
-- [~] T301 Fixtures (`sample.pdf`, `sample.docx`, `fake.pdf`, `empty.pdf`)
+- [x] T301 (b4126d4) Fixtures (`sample.pdf`, `sample.docx`, `fake.pdf`, `empty.pdf`)
   com texto próprio. `ContentTypeDetector` (Tika) + teste
   unitário.
-- [ ] T302 `DocumentUploadedEvent`, tópico `document-uploaded` (`NewTopic`),
+- [~] T302 `DocumentUploadedEvent`, tópico `document-uploaded` (`NewTopic`),
   `IngestionProducer` com espera do ack. Teste: evento no tópico com chave =
   `documentId`.
 - [ ] T303 `DocumentUploadService` com o fluxo do plan §6 (duplicado,

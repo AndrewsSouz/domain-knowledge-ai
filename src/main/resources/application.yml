@@ -19,6 +19,21 @@ spring:
       ddl-auto: validate
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      # Só confirma depois que todas as réplicas gravaram; com idempotência, um
+      # reenvio automático do cliente não duplica a mensagem.
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        enable.idempotence: true
+        # Sem cabeçalho com o nome da classe Java: o consumidor sabe o tipo.
+        spring.json.add.type.headers: false
+        # Kafka fora do ar não pode prender a requisição: em até 5 s pra achar
+        # o broker e 5 s pra confirmar, o upload responde 503 (RF8).
+        max.block.ms: 5000
+        request.timeout.ms: 3000
+        delivery.timeout.ms: 5000
 
 # Storage S3 dos originais (RustFS no ambiente local).
 storage:
