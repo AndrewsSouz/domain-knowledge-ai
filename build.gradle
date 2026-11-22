@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.domainknowledge'
+// Uma fonte só para a versão: o arquivo VERSION.
+version = file('VERSION').text.trim()
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+// Só o jar executável do Boot; o jar "plain" não é usado.
+jar {
+    enabled = false
+}
+
+repositories {
+    mavenCentral()
+}
+
+// O BOM do Spring Boot é importado pelo próprio plugin do Boot.
+dependencyManagement {
+    imports {
+        mavenBom 'software.amazon.awssdk:bom:2.57.11'
+    }
+}
+
+dependencies {
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'org.apache.tika:tika-core:4.2.0'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testImplementation 'org.testcontainers:testcontainers-kafka'
+    testImplementation 'org.awaitility:awaitility'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

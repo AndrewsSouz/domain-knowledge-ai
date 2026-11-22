@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: domain-knowledge-ai
+  threads:
+    virtual:
+      enabled: true

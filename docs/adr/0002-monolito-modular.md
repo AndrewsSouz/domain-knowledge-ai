@@ -1,0 +1,30 @@
+# ADR 0002 — Monólito modular, não microsserviços
+
+- **Status:** aceito
+- **Data:** 2026-11-22
+
+## Contexto
+
+O desenho tem várias caixas (upload, indexação, consulta). Dá pra ler como
+microsserviços, mas o projeto é pequeno e precisa rodar inteiro numa máquina
+de desenvolvimento comum.
+
+## Decisão
+
+Uma aplicação Spring Boot, com pacotes por capacidade (`document`,
+`ingestion`, `indexing`, `query`, `storage`, `ai`). O Kafka já separa o lado
+síncrono do assíncrono **dentro** do mesmo processo. Regra: um pacote não
+acessa o repositório de outro direto, só pelo serviço público dele.
+
+## Alternativas consideradas
+
+- Dois serviços (API de upload + worker de indexação): mais "bonito" no
+  diagrama, mas dobra build, deploy, configuração e memória, sem ganho real
+  nesse tamanho.
+
+## Consequências
+
+- O Kafka e os pacotes já deixam o corte pronto: separar o worker de
+  indexação vira uma mudança de deploy, não de código.
+- Dá pra validar os limites entre pacotes com teste de arquitetura (ArchUnit
+  ou Spring Modulith) mais adiante.
