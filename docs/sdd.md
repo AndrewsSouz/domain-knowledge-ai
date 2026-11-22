@@ -19,7 +19,7 @@ visão (docs/visao.md) + arquitetura (docs/arquitetura.md)
 | `docs/adr/` | Uma decisão técnica por arquivo: contexto, decisão, alternativas, consequências. |
 | `specs/NNN-slug/spec.md` | Escopo de uma fatia: requisitos e critérios de aceite. |
 | `specs/NNN-slug/plan.md` | Como a fatia é implementada: pacotes, contratos, schema, tópicos. |
-| `specs/NNN-slug/tasks.md` | Checklist ordenado (`[ ]` pendente, `[~]` em andamento, `[x]` concluída). |
+| `specs/NNN-slug/tasks.md` | Checklist ordenado (`[ ]` pendente, `[~]` em andamento, `[x]` concluída com o hash do commit, `[-]` cancelada). |
 | `CHANGELOG.md` | Mudanças por versão. |
 
 ## Critérios de aceite
@@ -40,6 +40,11 @@ Cada spec separa dois tipos:
 ## Regras do código
 
 - Código em inglês; documentação em português.
+- Pacotes: domínios no primeiro nível, sistemas externos em
+  `infrastructure/`, e dentro de cada um subpacotes por papel (`model`,
+  `service`, `repository`...). Tabela no plan da spec 001 §2.
+- Lombok pra getters; objetos criados por builder, inclusive `record`.
+- Um commit por task, com o build verde.
 - Integração externa (S3, Kafka, provedor de IA) fica atrás de uma interface;
   a regra de negócio não importa SDK de fornecedor.
 - Provedores de IA têm implementação fake determinística; nenhum teste chama

@@ -28,6 +28,10 @@ Regras que guiam o desenho:
   pelo `DocumentLifecycle`.
 - Toda integração externa fica atrás de uma interface própria; trocar de
   provedor não mexe na regra.
+- No código, os domínios (`document`, `ingestion`, `indexing`, `query`) ficam
+  no primeiro nível dos pacotes, e os clientes de sistemas externos (S3,
+  provedor de IA) em `infrastructure/` (ADR 0002; detalhe no plan da
+  spec 001 §2).
 
 ## 2. Fluxo de ingestão (fatias 1 e 2)
 
@@ -51,7 +55,7 @@ flowchart LR
     idx --> chk[DocumentChunker]
     idx --> emb[EmbeddingService]
     emb --> embi[EmbeddingIntegration]
-    embi --> ai[(OpenAI / outro provedor)]
+    embi --> ai[(Gemini)]
     idx --> vdb[VectorDbIntegration]
     vdb --> pgv[("PostgreSQL + pgvector")]
 ```
@@ -74,8 +78,13 @@ sequenceDiagram
     API->>U: upload(file)
     U->>U: valida tipo e tamanho, calcula SHA-256
     U->>DB: já existe esse SHA-256?
-    alt duplicado
+    alt duplicado em QUEUED, PROCESSING ou INDEXED
         U-->>C: 200 + documento existente
+    else duplicado em RECEIVED ou FAILED
+        U->>DB: status=RECEIVED (limpa o erro)
+        U->>P: publish DocumentUploadedEvent
+        U->>DB: status=QUEUED
+        U-->>C: 202 (reenfileirado)
     else novo
         U->>S3: put documents/{id}/v1/original.pdf
         U->>DB: insert status=RECEIVED
@@ -110,13 +119,17 @@ chamada.
 stateDiagram-v2
     [*] --> RECEIVED: original no S3 + linha no banco
     RECEIVED --> QUEUED: evento publicado
+    RECEIVED --> PROCESSING: consumidor mais rápido que o upload
     QUEUED --> PROCESSING: consumidor pegou
+    PROCESSING --> PROCESSING: mensagem reentregue após queda
     PROCESSING --> INDEXED: trechos gravados
-    PROCESSING --> FAILED: erro após retries
-    FAILED --> QUEUED: reprocessar (fatia 4)
+    PROCESSING --> FAILED: erro não retentável ou retries esgotados
+    FAILED --> RECEIVED: mesmo arquivo reenviado
     INDEXED --> [*]
 ```
 
+- Cada seta é um `UPDATE` condicional (`WHERE status IN (...)`), feito só
+  pelo `DocumentLifecycle`; transição fora do desenho não muda nada.
 - Um documento que fica muito tempo em `RECEIVED` é sinal de falha na
   publicação (§6).
 - Na fatia 2, gravar os trechos e mudar pra `INDEXED` acontece **na mesma
@@ -125,7 +138,7 @@ stateDiagram-v2
 
 ## 5. Evento Kafka
 
-Tópico `document-uploaded` (nome final no plan da fatia 1), chave da
+Tópico `document-uploaded`, chave da
 mensagem = `documentId` (garante ordem por documento na mesma partição).
 
 ```json
@@ -153,8 +166,10 @@ mensagem = `documentId` (garante ordem por documento na mesma partição).
   tabela na mesma transação do documento, e um publicador separado manda pro
   Kafka).
 - **Entrega duplicada:** o Kafka garante "pelo menos uma vez". O consumidor
-  ignora evento de documento que já está `PROCESSING` ou `INDEXED` naquela
-  versão, e os trechos têm id determinístico (`documentId:version:index`).
+  ignora evento de documento que já está `INDEXED` ou `FAILED` naquela
+  versão; em `PROCESSING` ele processa de novo (a aplicação pode ter caído no
+  meio), o que é seguro porque os trechos têm id determinístico
+  (`documentId:version:index`).
 - **Limite do provedor (429):** fatia 4, com backoff e limite de concorrência
   no consumidor.
 - **Máquina de desenvolvimento modesta (~8 GB de RAM):** Kafka em modo KRaft com um nó e heap

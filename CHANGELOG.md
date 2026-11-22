@@ -9,8 +9,8 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 
 - Documentação: visão, arquitetura, roadmap e ADRs 0001 a 0006.
 - Spec 001 (fatia 1, ingestão) com plan e tasks.
-- Projeto Gradle (Groovy DSL, wrapper 9.8.2), Java 25, Spring Boot 4.1.2;
-  versão do projeto lida do arquivo `VERSION`.
+- Projeto Gradle (Groovy DSL, wrapper 9.8.2), Java 25, Spring Boot 4.1.2 e
+  Lombok; versão do projeto lida do arquivo `VERSION`.
 - `docker-compose.yml` com PostgreSQL 18 + pgvector, Kafka 4.3 (KRaft) e
   RustFS, com healthcheck e limite de memória.
 - Configuração da aplicação para banco e Kafka, lendo o mesmo `.env` do
@@ -25,4 +25,3 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 - Storage S3 (`ObjectStorage`, implementação `S3Integration`), com criação
   do bucket na subida.
 - Storage no `/actuator/health` (`StorageHealthIndicator`).
-- Lombok (getters e builders), com a versão do BOM do Spring Boot.

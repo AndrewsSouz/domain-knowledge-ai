@@ -40,7 +40,7 @@ domain-knowledge-ai/
     │   ├── indexing/      # lado assíncrono: consumo e processamento
     │   ├── infrastructure/
     │   │   └── storage/   # S3 (fatia 2: ai/, cliente do Gemini)
-    │   └── shared/        # erros (Problem Details), logs (MDC), health
+    │   └── shared/        # config (Clock), erros (Problem Details), logs (MDC)
     ├── main/resources/
     │   ├── application.yml
     │   └── db/migration/V1__create_document.sql

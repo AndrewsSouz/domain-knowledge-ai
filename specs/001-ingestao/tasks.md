@@ -37,7 +37,7 @@ vazio passa com os três containers.
 - [x] T201 (4c63e99) `ObjectStorage`, `S3Integration`, `StorageProperties`,
   `BucketInitializer`, `StorageObjectNotFoundException`. Teste contra o
   RustFS: gravar, ler, objeto inexistente.
-- [~] T202 `StorageHealthIndicator`.
+- [x] T202 (476b583) `StorageHealthIndicator`.
 
 ## T3 — Upload
 

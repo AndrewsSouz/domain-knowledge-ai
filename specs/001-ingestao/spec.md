@@ -18,8 +18,9 @@ implementacao: "—"
 ## 1. Objetivo
 
 Provar o **esqueleto assíncrono ponta a ponta**: um documento sobe pela API,
-fica guardado no storage S3 local (RustFS), registrado no Postgres, vira um evento no Kafka, e um
-consumidor pega esse evento e leva o documento até o fim do ciclo de vida.
+fica guardado no storage S3 local (RustFS), registrado no Postgres, vira um
+evento no Kafka, e um consumidor pega esse evento e leva o documento até o
+fim do ciclo de vida.
 
 Nesta fatia o "indexador" é um **stub**: baixa o arquivo do storage, confere o
 SHA-256 e marca `INDEXED`. A fatia 2 troca o stub pela indexação de verdade
@@ -81,8 +82,8 @@ definitiva é o outbox da fatia 4.
 ## 4. Requisitos não funcionais
 
 - **RNF1** `docker compose up -d` sobe Postgres (imagem com pgvector),
-  Kafka (KRaft, um nó) e RustFS, storage compatível com S3 (ADR 0005; bucket criado automaticamente).
-  Uso de RAM do compose abaixo de ~1,5 GB.
+  Kafka (KRaft, um nó) e RustFS, storage compatível com S3 (ADR 0005; o
+  bucket é criado pela aplicação). Uso de RAM do compose abaixo de ~1,5 GB.
 - **RNF2** Schema só por Flyway.
 - **RNF3** Logs com `documentId` em todas as linhas do fluxo (MDC), dos dois
   lados do Kafka.
@@ -128,8 +129,8 @@ Demo (roteiro manual):
 
 ## 7. Decisões
 
-1. **Endpoint `POST /v1/documents`.** Salva no storage (RustFS), registra no Postgres e
-   publica no Kafka só a referência (`storageKey`), não o arquivo.
+1. **Endpoint `POST /v1/documents`.** Salva no storage (RustFS), registra no
+   Postgres e publica no Kafka só a referência (`storageKey`), não o arquivo.
 2. **PDF e DOCX.** TXT e Markdown ficam no backlog.
 3. **Duplicado por SHA-256 devolve o existente.** Alternativas descartadas:
    aceitar tudo como novo (duplica trechos na busca, e a resposta citaria o
