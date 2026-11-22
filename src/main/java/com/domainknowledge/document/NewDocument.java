@@ -1,6 +1,7 @@
 package com.domainknowledge.document;
 
 import java.util.UUID;
+import lombok.Builder;
 
 /**
  * Dados de um documento que acabou de chegar, antes de existir no banco.
@@ -11,6 +12,7 @@ import java.util.UUID;
  * @param storageKey       onde o original foi gravado no storage
  * @param uploadedBy       quem enviou; fica vazio até a autenticação (fatia 4)
  */
+@Builder
 public record NewDocument(
         UUID id,
         String title,

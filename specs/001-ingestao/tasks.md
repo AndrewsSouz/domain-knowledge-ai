@@ -27,7 +27,7 @@ vazio passa com os três containers.
 
 ## T1 — Documento e ciclo de vida
 
-- [~] T101 Migration `V1__create_document.sql`, entidade `Document`, enum
+- [x] T101 (a8f49e0) Migration `V1__create_document.sql`, entidade `Document`, enum
   `DocumentStatus`, `DocumentRepository`.
 - [ ] T102 `DocumentLifecycle` com as transições do plan §5 (updates
   condicionais). Teste de integração de cada transição válida e inválida.

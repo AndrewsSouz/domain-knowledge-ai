@@ -65,15 +65,15 @@ class DocumentRepositoryIntegrationTest {
 
     private static NewDocument newDocument(String sha256) {
         UUID id = UUID.randomUUID();
-        return new NewDocument(
-                id,
-                "Política de férias",
-                "politica-ferias.pdf",
-                "application/pdf",
-                1024,
-                sha256,
-                "documents/" + id + "/v1/original.pdf",
-                null);
+        return NewDocument.builder()
+                .id(id)
+                .title("Política de férias")
+                .originalFilename("politica-ferias.pdf")
+                .contentType("application/pdf")
+                .sizeBytes(1024)
+                .sha256(sha256)
+                .storageKey("documents/" + id + "/v1/original.pdf")
+                .build();
     }
 
     private static String randomSha256() {

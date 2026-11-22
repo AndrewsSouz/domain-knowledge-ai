@@ -16,6 +16,7 @@ nota).
 | `io.spring.dependency-management` | 1.1.7 | 12/2024 |
 | AWS SDK v2 (BOM) | 2.57.11 | 06/11/2026 |
 | Apache Tika (`tika-core`) | 4.2.0 | 25/10/2026 |
+| Lombok (pelo BOM do Boot) | 1.18.48 | 01/09/2026 |
 | Pelo BOM do Boot 4.1.2 (conferido na T001) | Spring Framework 7.0.10, Spring Kafka 4.1.2 (cliente Kafka 4.2.2), Hibernate 7.4.13, Flyway 12.4.0, Jackson 3.1.7, Testcontainers 2.0.5 | — |
 | Imagem Postgres | `pgvector/pgvector:0.8.6-pg18` | 13/08/2026 |
 | Imagem Kafka | `apache/kafka:4.3.2` | 20/10/2026 |
@@ -66,7 +67,8 @@ não usa o repositório de outro. `ingestion` e `indexing` mudam status só pelo
 
 Recursos do Java 25 usados:
 
-- `record` para o evento, os DTOs e os resultados.
+- `record` para o evento, os DTOs e os resultados, criados por builder
+  (`@Builder` do Lombok, ADR 0001).
 - `sealed interface UploadResult permits Accepted, AlreadyExists` e
   `switch` com *pattern matching* no controller para escolher `202` ou `200`:
   o compilador obriga a tratar todos os casos.
@@ -133,7 +135,9 @@ Na entidade: o `id` vem da aplicação, então `Document` implementa
 `Persistable` pra o `save` fazer `INSERT` direto, sem `SELECT` antes; `sha256`
 usa `@JdbcTypeCode(SqlTypes.CHAR)` pra bater com o `char(64)` na validação do
 schema; a coluna `version` é a versão do documento, não lock otimista (sem
-`@Version`). Sem setters: o status só muda pelos `UPDATE` condicionais.
+`@Version`). Lombok: `@Getter` e builder privado, sem setters; todo
+documento nasce por `Document.received(NewDocument, Instant)` e o status só
+muda pelos `UPDATE` condicionais.
 
 **Transições com `UPDATE` condicional.** Cada mudança de status é um
 `UPDATE ... WHERE id = ? AND status IN (...)` e devolve quantas linhas mudou.

@@ -12,6 +12,11 @@ import jakarta.persistence.Transient;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.domain.Persistable;
@@ -20,9 +25,16 @@ import org.springframework.data.domain.Persistable;
  * Documento enviado pela API. Só leitura do lado da aplicação: o status muda
  * por {@code UPDATE} condicional no {@link DocumentRepository}, chamado pelo
  * {@code DocumentLifecycle}. Por isso a entidade não tem setters.
+ *
+ * <p>O builder é privado: todo documento nasce por {@link #received}, que
+ * garante status {@code RECEIVED} e versão 1.
  */
 @Entity
 @Table(name = "document")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(access = AccessLevel.PRIVATE)
 public class Document implements Persistable<UUID> {
 
     @Id
@@ -61,30 +73,28 @@ public class Document implements Persistable<UUID> {
      * se é insert ou update; sem isso, o {@code save} faria um SELECT antes.
      */
     @Transient
+    @Getter(AccessLevel.NONE)
+    @Builder.Default
     private boolean isNew = true;
-
-    protected Document() {
-        // exigido pelo JPA
-    }
 
     /** Documento novo, em {@link DocumentStatus#RECEIVED}. */
     static Document received(NewDocument data, Instant now) {
         // O Postgres guarda microssegundos; truncar evita diferença ao reler.
         Instant at = now.truncatedTo(ChronoUnit.MICROS);
-        Document document = new Document();
-        document.id = data.id();
-        document.title = data.title();
-        document.originalFilename = data.originalFilename();
-        document.contentType = data.contentType();
-        document.sizeBytes = data.sizeBytes();
-        document.sha256 = data.sha256();
-        document.storageKey = data.storageKey();
-        document.uploadedBy = data.uploadedBy();
-        document.version = 1;
-        document.status = DocumentStatus.RECEIVED;
-        document.createdAt = at;
-        document.updatedAt = at;
-        return document;
+        return Document.builder()
+                .id(data.id())
+                .title(data.title())
+                .originalFilename(data.originalFilename())
+                .contentType(data.contentType())
+                .sizeBytes(data.sizeBytes())
+                .sha256(data.sha256())
+                .storageKey(data.storageKey())
+                .uploadedBy(data.uploadedBy())
+                .version(1)
+                .status(DocumentStatus.RECEIVED)
+                .createdAt(at)
+                .updatedAt(at)
+                .build();
     }
 
     @PostLoad
@@ -96,58 +106,5 @@ public class Document implements Persistable<UUID> {
     @Override
     public boolean isNew() {
         return isNew;
-    }
-
-    @Override
-    public UUID getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getOriginalFilename() {
-        return originalFilename;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public long getSizeBytes() {
-        return sizeBytes;
-    }
-
-    public String getSha256() {
-        return sha256;
-    }
-
-    public String getStorageKey() {
-        return storageKey;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public DocumentStatus getStatus() {
-        return status;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public String getUploadedBy() {
-        return uploadedBy;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
     }
 }

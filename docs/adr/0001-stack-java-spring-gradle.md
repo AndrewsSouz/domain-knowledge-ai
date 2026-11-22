@@ -17,7 +17,9 @@ estável, e o build precisa ser reproduzível em qualquer máquina.
 - Versões de BOM pelo plugin `io.spring.dependency-management` (`mavenBom`);
   o BOM do Spring Boot é importado pelo próprio plugin do Boot.
 - **Flyway** pra migrations, **Testcontainers** pra testes de integração.
-- Sem Lombok: `record` cobre DTOs e eventos.
+- **Lombok** pra tirar o código repetitivo das classes: `@Getter` nas
+  entidades e criação de objetos por **builder** (`@Builder`), inclusive nos
+  `record` de DTOs e eventos. Versão gerenciada pelo BOM do Spring Boot.
 
 ## Alternativas consideradas
 
@@ -27,9 +29,15 @@ estável, e o build precisa ser reproduzível em qualquer máquina.
 - Java 21: o mais usado hoje nas empresas; o código seria o mesmo, e o 25 já
   é LTS.
 - Spring Boot 3.5: mais material de exemplo, mas a linha 4 é a atual.
+- Sem Lombok, só `record` e getters escritos à mão: menos uma ferramenta no
+  build, mas entidades JPA (que não podem ser `record`) ficam cheias de
+  getters, e construtor com muitos parâmetros é fácil de errar a ordem.
 
 ## Consequências
 
 - O *toolchain* garante que o build usa o JDK 25, não o que estiver no PATH.
+- Builder em vez de construtor: cada campo é nomeado na criação. Na
+  entidade, o builder é privado e a criação passa por um método de fábrica
+  que garante o estado inicial válido.
 - Spring Boot 4 tem starters modulares (inclusive de teste) e Jackson 3; os
   nomes conferidos estão no plan da spec 001.

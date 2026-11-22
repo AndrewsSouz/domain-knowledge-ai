@@ -20,3 +20,4 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   Kafka e RustFS) e teste de fumaça da infraestrutura.
 - Tabela `document` (migration V1, com `unique` no SHA-256 e `check` nos
   status), entidade `Document` e `DocumentRepository`.
+- Lombok (getters e builders), com a versão do BOM do Spring Boot.
