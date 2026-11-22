@@ -17,7 +17,7 @@ Boot** (ADR 0002), não serviços separados. O esboço inicial está em
 | `EmbeddingService` + `EmbeddingIntegration` | assíncrono e consulta | Regra de embedding / adaptador do provedor de IA. |
 | `VectorDbIntegration` | assíncrono e consulta | Grava e busca vetores (pgvector, ADR 0003). |
 | `S3Integration` | os dois | Grava o original no upload; lê no processamento (ADR 0005). |
-| `DocumentRepository` + `DocumentLifecycle` | os dois | Metadados e ciclo de vida; única porta para mudar status. |
+| `DocumentRepository` + `DocumentLifecycle` + `DocumentQueryService` | os dois | Metadados e ciclo de vida. O `DocumentLifecycle` é a única porta pra mudar status; o `DocumentQueryService`, pra ler. |
 | `QuestionAnsweringService` + `ChatIntegration` | consulta | Busca trechos, monta o prompt, chama o LLM, devolve resposta com fontes (§3). |
 
 Regras que guiam o desenho:

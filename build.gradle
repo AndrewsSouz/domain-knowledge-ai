@@ -34,6 +34,9 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    // Agente do Mockito carregado na subida da JVM de teste; sem isso ele se
+    // anexa sozinho, e o Java avisa que vai bloquear isso por padrão.
+    mockitoAgent
 }
 
 dependencies {
@@ -67,8 +70,12 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    mockitoAgent('org.mockito:mockito-core') {
+        transitive = false
+    }
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }

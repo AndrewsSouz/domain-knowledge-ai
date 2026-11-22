@@ -28,3 +28,6 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 - Detecção do tipo de arquivo pelo conteúdo (PDF e DOCX, com Tika).
 - Evento `DocumentUploadedEvent` no tópico `document-uploaded` (3
   partições, chave = `documentId`), publicado com confirmação do Kafka.
+- Upload (`DocumentUploadService`): tipo pelo conteúdo, SHA-256 em stream,
+  duplicado devolve o existente ou reenfileira (`RECEIVED`/`FAILED`), grava
+  no storage, registra e publica.

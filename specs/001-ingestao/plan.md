@@ -224,6 +224,23 @@ arquivo órfão (inofensivo). Se cair entre o banco e o Kafka, sobra um
 `RECEIVED` (visível e recuperável reenviando). O contrário (evento sem
 arquivo) nunca acontece.
 
+Na implementação (T303):
+
+- O serviço recebe um `UploadRequest` (`ingestion.model`), não um
+  `MultipartFile`: o conteúdo é um `InputStreamSource` do Spring core, que o
+  `MultipartFile` já implementa. Cada leitura abre um stream novo (tipo, hash,
+  storage), então o arquivo nunca fica inteiro na memória.
+- Sem `@Transactional` no serviço: cada passo do `DocumentLifecycle` é uma
+  transação curta, e nenhuma transação do banco fica aberta esperando o
+  Kafka.
+- Leituras do documento por um `DocumentQueryService` (`document.service`);
+  o `DocumentLifecycle` continua só com as mudanças.
+- `ContentHasher` calcula o SHA-256 com `DigestInputStream`.
+- Corridas tratadas: `DuplicateDocumentException` no `register` vira
+  duplicado; `resetForRetry` que não vale (outra requisição reenfileirou
+  antes) devolve `AlreadyExists`; `markQueued` que não vale (o consumidor já
+  pegou) é ignorado.
+
 ## 7. Kafka
 
 - Tópico `document-uploaded`, criado por um bean `NewTopic` (3 partições,
@@ -345,6 +362,12 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   página) e `sample.docx` (pacote OOXML mínimo), os dois com o mesmo texto
   curto e extraível; `fake.pdf` (texto com extensão `.pdf`); `empty.pdf`
   (0 bytes). Menos de 1 KB cada.
+- `support/TopicReader` lê um tópico do começo com um grupo novo e devolve
+  as mensagens de uma chave; depois de achar o esperado, continua lendo 2 s
+  pra pegar mensagem a mais (é assim que o A3 prova "um evento só").
+- Agente do Mockito carregado com `-javaagent` na task `test` (configuração
+  `mockitoAgent` no `build.gradle`), em vez de ele se anexar sozinho em tempo
+  de execução, o que o Java avisa que vai bloquear.
 - Em máquina com pouca RAM: rodar os testes de integração com o `docker compose`
   parado.
 

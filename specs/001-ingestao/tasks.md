@@ -46,10 +46,10 @@ Fim do bloco: upload grava no storage, no banco e publica no Kafka.
 - [x] T301 (b4126d4) Fixtures (`sample.pdf`, `sample.docx`, `fake.pdf`, `empty.pdf`)
   com texto próprio. `ContentTypeDetector` (Tika) + teste
   unitário.
-- [~] T302 `DocumentUploadedEvent`, tópico `document-uploaded` (`NewTopic`),
+- [x] T302 (43bcbb6) `DocumentUploadedEvent`, tópico `document-uploaded` (`NewTopic`),
   `IngestionProducer` com espera do ack. Teste: evento no tópico com chave =
   `documentId`.
-- [ ] T303 `DocumentUploadService` com o fluxo do plan §6 (duplicado,
+- [~] T303 `DocumentUploadService` com o fluxo do plan §6 (duplicado,
   reenfileirar, falha na publicação) e o `UploadResult` selado. **A1, A3.**
 - [ ] T304 `DocumentController` (`POST`, `GET` por id, `GET` paginado) e
   `ApiExceptionHandler` com Problem Details. **A4, A7.**
