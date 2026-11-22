@@ -196,7 +196,13 @@ violação do `unique` de `sha256` (`document_sha256_key`) em
 2. `ContentTypeDetector` (Tika): lê os primeiros bytes e usa o nome do
    arquivo como dica. Aceita só `application/pdf` e
    `application/vnd.openxmlformats-officedocument.wordprocessingml.document`.
-   Um `.txt` renomeado pra `.pdf` é barrado (415).
+   Um `.txt` renomeado pra `.pdf` é barrado (415). Devolve
+   `Optional<DocumentType>` (`ingestion.model`: `PDF`, `DOCX`, com media type
+   e extensão da chave no storage). Limites do `tika-core` 4.2.0, conferidos
+   na T301: DOCX sem a extensão `.docx` é recusado (ele vê um pacote Office,
+   mas não sabe se é Word ou Excel); um ZIP qualquer chamado `.docx` passa e
+   só falha na extração (fatia 2); arquivo vazio não tem bytes, então vale o
+   nome, e por isso o passo 1 vem antes.
 3. SHA-256 do conteúdo, calculado em streaming.
 4. Procura por `sha256`:
    - existe em `QUEUED`/`PROCESSING`/`INDEXED` → `AlreadyExists`;
@@ -320,9 +326,10 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   propriedades `storage.*` por um bean `DynamicPropertyRegistrar`.
 - Tempo medido na T004: ≈ 40 s pra subir os três containers, uma vez por
   execução.
-- Fixtures em `src/test/resources/fixtures/`: `sample.pdf` e `sample.docx`
-  pequenos, com texto próprio; `fake.pdf` (texto com extensão
-  `.pdf`); `empty.pdf`.
+- Fixtures em `src/test/resources/fixtures/`: `sample.pdf` (PDF 1.4 de uma
+  página) e `sample.docx` (pacote OOXML mínimo), os dois com o mesmo texto
+  curto e extraível; `fake.pdf` (texto com extensão `.pdf`); `empty.pdf`
+  (0 bytes). Menos de 1 KB cada.
 - Em máquina com pouca RAM: rodar os testes de integração com o `docker compose`
   parado.
 
