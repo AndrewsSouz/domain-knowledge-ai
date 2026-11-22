@@ -3,6 +3,7 @@ package com.domainknowledge.infrastructure.storage.config;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
+import lombok.Builder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
  * @param bucket       bucket onde ficam os originais
  * @param createBucket cria o bucket na subida se ele não existir
  */
+@Builder
 @Validated
 @ConfigurationProperties("storage")
 public record StorageProperties(

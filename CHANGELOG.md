@@ -24,4 +24,5 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   `UPDATE` condicional, seguras sob concorrência.
 - Storage S3 (`ObjectStorage`, implementação `S3Integration`), com criação
   do bucket na subida.
+- Storage no `/actuator/health` (`StorageHealthIndicator`).
 - Lombok (getters e builders), com a versão do BOM do Spring Boot.

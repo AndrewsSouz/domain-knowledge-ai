@@ -63,6 +63,7 @@ conforme aparecem:
 | `integration` | clientes de sistemas externos (o `*Integration` do esboço) | `infrastructure.storage.integration.S3Integration` |
 | `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
+| `health` | indicadores do `/actuator/health` | `infrastructure.storage.health.StorageHealthIndicator` |
 
 Regra do ADR 0002: um pacote não usa o repositório de outro. `ingestion` e
 `indexing` mudam status só pelo `DocumentLifecycle`. É convenção de código,
@@ -279,7 +280,8 @@ Na implementação:
   consumer antes de processar, limpo no `finally`. Padrão de log com
   `%X{documentId}`.
 - **Health:** `/actuator/health` com banco (padrão do Boot),
-  `StorageHealthIndicator` (`headBucket`) e `KafkaHealthIndicator`
+  `StorageHealthIndicator` (`headBucket` com timeout de 3 s; aparece como
+  `storage`) e `KafkaHealthIndicator`
   (`describeCluster` com timeout de 3 s; o Boot não traz um pronto).
 - **Configuração:** `application.yml` importa o `.env` da raiz
   (`spring.config.import: optional:file:.env[.properties]`), o mesmo que o
