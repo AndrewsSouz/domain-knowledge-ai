@@ -1,6 +1,21 @@
 spring:
   application:
     name: domain-knowledge-ai
+  # Lê o mesmo .env do docker compose, se existir. Sem ele, valem os padrões
+  # abaixo, iguais aos do compose.
+  config:
+    import: optional:file:.env[.properties]
   threads:
     virtual:
       enabled: true
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:dka}
+    username: ${POSTGRES_USER:dka}
+    password: ${POSTGRES_PASSWORD:dka}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # O schema é do Flyway; o Hibernate só confere se as entidades batem.
+      ddl-auto: validate
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}

@@ -10,17 +10,18 @@ executado e confirmado.
 Fim do bloco: projeto compila, infraestrutura sobe, teste de integração
 vazio passa com os três containers.
 
-- [~] T001 `git init`, `.gitignore`, `.editorconfig`, `.env.example`.
+- [x] T001 (d3f271a) `git init`, `.gitignore`, `.editorconfig`, `.env.example`.
   Projeto Gradle (Groovy DSL, wrapper 9.8.2 com checksum, toolchain Java 25)
   com as versões do plan §1. Conferir os nomes dos starters do Boot 4.1.
   `./gradlew build` verde.
-- [ ] T002 Seção "Comandos" do `CLAUDE.md` e `README.md` inicial (o que é,
+- [~] T002 Seção "Comandos" do `CLAUDE.md` e `README.md` inicial (o que é,
   status, como rodar).
-- [ ] T003 `docker-compose.yml` (Postgres com pgvector, Kafka KRaft, RustFS)
+- [~] T003 `docker-compose.yml` (Postgres com pgvector, Kafka KRaft, RustFS)
   com healthcheck e limite de memória. Conferir as variáveis do RustFS 1.0.4.
   **D:** `docker compose up -d` deixa os três `healthy` e o
-  `docker stats` abaixo de 1,5 GB.
-- [ ] T004 Suporte de teste de integração (`support/`): containers
+  `docker stats` abaixo de 1,5 GB. *Confirmado em 22/11/2026: três
+  `healthy`, ≈ 435 MB, console do storage acessado.*
+- [~] T004 Suporte de teste de integração (`support/`): containers
   compartilhados, `@ServiceConnection` (Postgres, Kafka), RustFS por
   `@DynamicPropertySource`. Teste de subida do contexto verde.
 

@@ -229,8 +229,10 @@ record DocumentUploadedEvent(UUID eventId, String eventType, Instant occurredAt,
 - **Health:** `/actuator/health` com banco (padrão do Boot),
   `StorageHealthIndicator` (`headBucket`) e `KafkaHealthIndicator`
   (`describeCluster` com timeout de 3 s; o Boot não traz um pronto).
-- **Configuração:** `application.yml` lê variáveis de ambiente com padrão
-  igual ao do compose, então `./gradlew bootRun` funciona sem `.env`.
+- **Configuração:** `application.yml` importa o `.env` da raiz
+  (`spring.config.import: optional:file:.env[.properties]`), o mesmo que o
+  compose lê, com padrão igual ao do compose; `./gradlew bootRun` funciona
+  com ou sem `.env`.
 
 ## 11. docker-compose.yml
 
@@ -238,10 +240,11 @@ record DocumentUploadedEvent(UUID eventId, String eventType, Instant occurredAt,
 | --- | --- | --- | --- |
 | `postgres` | 5432 | 256 MB | banco `dka`, healthcheck `pg_isready` |
 | `kafka` | 9092 | 768 MB | KRaft com um nó (broker + controller), `KAFKA_HEAP_OPTS=-Xmx384m -Xms384m` |
-| `storage` (RustFS) | 9000 (S3), 9001 (console) | 256 MB | volume nomeado, credenciais do `.env` |
+| `storage` (RustFS) | 9000 (S3), 9001 (console em `/rustfs/console/`) | 256 MB | `RUSTFS_ACCESS_KEY`/`RUSTFS_SECRET_KEY` do `.env`, healthcheck em `/health` |
 
-Meta: menos de 1,5 GB somando os três (`docker stats`). Os nomes exatos das
-variáveis do RustFS são conferidos na T003, na documentação da 1.0.4.
+Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
+(Kafka 320 MB, Postgres 55 MB, RustFS 60 MB). Postgres 18 monta o volume em
+`/var/lib/postgresql` (não mais em `.../data`).
 
 ## 12. Testes
 
@@ -251,8 +254,18 @@ variáveis do RustFS são conferidos na T003, na documentação da 1.0.4.
 | Fatia web | `@WebMvcTest` | status HTTP e Problem Details do controller (A4, A7) |
 | Integração | `@SpringBootTest` + Testcontainers | Postgres e Kafka com `@ServiceConnection`; RustFS com `GenericContainer` + `@DynamicPropertySource`; Awaitility pra esperar o assíncrono (A1, A2, A3, A5, A6, A8, A9) |
 
-- Containers compartilhados entre as classes de teste (um por execução), pra
-  não subir três containers por classe.
+- Containers como beans numa `@TestConfiguration`
+  (`support/TestcontainersConfiguration`), com as mesmas imagens do compose.
+  A anotação `@IntegrationTest` junta `@SpringBootTest` e essa configuração;
+  o cache de contexto do Spring Test reaproveita os mesmos containers entre
+  as classes que usam a mesma configuração.
+- Testcontainers 2: `org.testcontainers.postgresql.PostgreSQLContainer` e
+  `org.testcontainers.kafka.KafkaContainer` (pacotes novos, sem genérico). A
+  imagem do pgvector entra com `asCompatibleSubstituteFor("postgres")`.
+- RustFS sem `@ServiceConnection` (o Boot não tem conexão automática pra S3):
+  propriedades `storage.*` por um bean `DynamicPropertyRegistrar`.
+- Tempo medido na T004: ≈ 40 s pra subir os três containers, uma vez por
+  execução.
 - Fixtures em `src/test/resources/fixtures/`: `sample.pdf` e `sample.docx`
   pequenos, com texto da empresa fictícia; `fake.pdf` (texto com extensão
   `.pdf`); `empty.pdf`.
