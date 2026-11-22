@@ -22,4 +22,6 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   status), entidade `Document` e `DocumentRepository`.
 - `DocumentLifecycle`: registro do documento e transições de status por
   `UPDATE` condicional, seguras sob concorrência.
+- Storage S3 (`ObjectStorage`, implementação `S3Integration`), com criação
+  do bucket na subida.
 - Lombok (getters e builders), com a versão do BOM do Spring Boot.

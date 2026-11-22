@@ -38,7 +38,8 @@ domain-knowledge-ai/
     │   ├── document/      # o documento e o ciclo de vida dele
     │   ├── ingestion/     # lado síncrono: upload e publicação
     │   ├── indexing/      # lado assíncrono: consumo e processamento
-    │   ├── storage/       # S3
+    │   ├── infrastructure/
+    │   │   └── storage/   # S3 (fatia 2: ai/, cliente do Gemini)
     │   └── shared/        # erros (Problem Details), logs (MDC), health
     ├── main/resources/
     │   ├── application.yml
@@ -46,15 +47,20 @@ domain-knowledge-ai/
     └── test/java/com/domainknowledge/ (mesmos pacotes + support/)
 ```
 
-Pacote base `com.domainknowledge`. Dentro de cada capacidade, subpacotes por
-papel da classe, criados conforme aparecem:
+Pacote base `com.domainknowledge`. No primeiro nível ficam os **domínios**
+(`document`, `ingestion`, `indexing`; `query` na fatia 3), organizados por
+conceito de negócio, como no DDD. O que fala com sistema externo (S3, e o
+provedor de IA na fatia 2) fica em `infrastructure/`, um pacote por sistema.
+Dentro de cada domínio ou sistema, subpacotes por papel da classe, criados
+conforme aparecem:
 
 | Subpacote | O que vai | Exemplo |
 | --- | --- | --- |
 | `model` | entidades, enums, records de dados | `document.model.Document`, `NewDocument` |
 | `exception` | exceções do domínio | `document.exception.DuplicateDocumentException` |
 | `repository` | Spring Data | `document.repository.DocumentRepository` |
-| `service` | regras e orquestração | `document.service.DocumentLifecycle` |
+| `service` | regras, orquestração e interfaces que o resto da aplicação usa | `document.service.DocumentLifecycle`, `infrastructure.storage.service.ObjectStorage` |
+| `integration` | clientes de sistemas externos (o `*Integration` do esboço) | `infrastructure.storage.integration.S3Integration` |
 | `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
 
@@ -73,7 +79,7 @@ seguida na escrita e conferida na revisão.
 | `IngestionConsumer` | `IngestionConsumer` | `indexing` | Só recebe o evento, põe o `documentId` no log e chama o serviço. Não toca no banco. |
 | `IngestionService` | `DocumentIndexingService` | `indexing` | Assume o documento (`PROCESSING`), chama o indexador, marca `INDEXED` ou `FAILED`. |
 | `DocumentUtil` | `DocumentIndexer` (interface) + `ChecksumOnlyIndexer` (stub) | `indexing` | Fatia 1: baixa e confere o hash. Fatia 2: troca por extração + chunking + embeddings. |
-| `S3Integration` | `ObjectStorage` (interface) + `S3Integration` | `storage` | `put`, `get`, `exists`. Usado pelos dois lados. |
+| `S3Integration` | `ObjectStorage` (interface) + `S3Integration` | `infrastructure.storage` | `put`, `get`, `exists`. Usado pelos dois lados. |
 | `DocumentRepository` | `DocumentRepository` | `document` | Spring Data JPA + updates condicionais de status (§5). |
 | — (novo) | `DocumentLifecycle` | `document` | Única porta para mudar status. Encapsula as transições válidas. |
 
@@ -251,7 +257,21 @@ record DocumentUploadedEvent(UUID eventId, String eventType, Instant occurredAt,
 - `BucketInitializer`: na subida, cria o bucket se não existir e
   `create-bucket=true`.
 - `NoSuchKeyException` → `StorageObjectNotFoundException` (nossa, pra não
-  vazar o SDK pra fora do pacote).
+  vazar o SDK pra fora do pacote). Qualquer outra falha do SDK vira
+  `StorageException`, que é a classe mãe.
+
+Na implementação:
+
+- `ObjectStorage` (`infrastructure.storage.service`) com `put(ObjectUpload, InputStream)`,
+  `get(key)` (stream; quem chama fecha) e `exists(key)`. `ObjectUpload` é um
+  record com builder: chave, content type, tamanho e SHA-256 (vai no
+  metadado `x-amz-meta-sha256`).
+- Checksum do SDK em `WHEN_REQUIRED`: o padrão do AWS SDK v2 manda checksum
+  em todo upload, num formato que nem todo storage compatível aceita.
+- `BucketInitializer` roda na criação dos beans, antes de o servidor web
+  aceitar requisição; storage fora do ar derruba a subida (falha rápido).
+- "Não existe" no `HEAD` chega só como `404` (sem corpo), então `exists` e
+  o `BucketInitializer` olham o status, não o tipo da exceção.
 
 ## 10. Operação
 

@@ -19,3 +19,11 @@ spring:
       ddl-auto: validate
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+# Storage S3 dos originais (RustFS no ambiente local).
+storage:
+  endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+  bucket: ${STORAGE_BUCKET:documents}
+  access-key: ${STORAGE_ACCESS_KEY:dka-access}
+  secret-key: ${STORAGE_SECRET_KEY:dka-secret-change-me}
+  create-bucket: true
