@@ -18,3 +18,5 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 - README com visão geral e como rodar.
 - Base de testes de integração com Testcontainers (PostgreSQL + pgvector,
   Kafka e RustFS) e teste de fumaça da infraestrutura.
+- Tabela `document` (migration V1, com `unique` no SHA-256 e `check` nos
+  status), entidade `Document` e `DocumentRepository`.

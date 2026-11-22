@@ -14,20 +14,20 @@ vazio passa com os três containers.
   Projeto Gradle (Groovy DSL, wrapper 9.8.2 com checksum, toolchain Java 25)
   com as versões do plan §1. Conferir os nomes dos starters do Boot 4.1.
   `./gradlew build` verde.
-- [~] T002 Seção "Comandos" do `CLAUDE.md` e `README.md` inicial (o que é,
+- [x] T002 (d3af157) Seção "Comandos" do `CLAUDE.md` e `README.md` inicial (o que é,
   status, como rodar).
-- [~] T003 `docker-compose.yml` (Postgres com pgvector, Kafka KRaft, RustFS)
+- [x] T003 (d3af157) `docker-compose.yml` (Postgres com pgvector, Kafka KRaft, RustFS)
   com healthcheck e limite de memória. Conferir as variáveis do RustFS 1.0.4.
   **D:** `docker compose up -d` deixa os três `healthy` e o
   `docker stats` abaixo de 1,5 GB. *Confirmado em 22/11/2026: três
   `healthy`, ≈ 435 MB, console do storage acessado.*
-- [~] T004 Suporte de teste de integração (`support/`): containers
+- [x] T004 (d3af157) Suporte de teste de integração (`support/`): containers
   compartilhados, `@ServiceConnection` (Postgres, Kafka), RustFS por
-  `@DynamicPropertySource`. Teste de subida do contexto verde.
+  `DynamicPropertyRegistrar`. Teste de subida do contexto verde.
 
 ## T1 — Documento e ciclo de vida
 
-- [ ] T101 Migration `V1__create_document.sql`, entidade `Document`, enum
+- [~] T101 Migration `V1__create_document.sql`, entidade `Document`, enum
   `DocumentStatus`, `DocumentRepository`.
 - [ ] T102 `DocumentLifecycle` com as transições do plan §5 (updates
   condicionais). Teste de integração de cada transição válida e inválida.

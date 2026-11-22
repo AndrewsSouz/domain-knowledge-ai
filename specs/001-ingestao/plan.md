@@ -117,7 +117,8 @@ create table document (
     sha256            char(64)     not null unique,
     storage_key       varchar(512) not null,
     version           integer      not null default 1,
-    status            varchar(20)  not null,
+    status            varchar(20)  not null
+        check (status in ('RECEIVED', 'QUEUED', 'PROCESSING', 'INDEXED', 'FAILED')),
     error_message     text,
     uploaded_by       varchar(100),
     created_at        timestamptz  not null,
@@ -127,6 +128,12 @@ create index idx_document_status_created_at on document (status, created_at desc
 ```
 
 A extensão `vector` só entra na migration da fatia 2.
+
+Na entidade: o `id` vem da aplicação, então `Document` implementa
+`Persistable` pra o `save` fazer `INSERT` direto, sem `SELECT` antes; `sha256`
+usa `@JdbcTypeCode(SqlTypes.CHAR)` pra bater com o `char(64)` na validação do
+schema; a coluna `version` é a versão do documento, não lock otimista (sem
+`@Version`). Sem setters: o status só muda pelos `UPDATE` condicionais.
 
 **Transições com `UPDATE` condicional.** Cada mudança de status é um
 `UPDATE ... WHERE id = ? AND status IN (...)` e devolve quantas linhas mudou.
@@ -252,7 +259,7 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
 | --- | --- | --- |
 | Unitário | JUnit 5 + AssertJ | `ContentTypeDetector`, cálculo de hash, regras do `DocumentUploadService` com dublês |
 | Fatia web | `@WebMvcTest` | status HTTP e Problem Details do controller (A4, A7) |
-| Integração | `@SpringBootTest` + Testcontainers | Postgres e Kafka com `@ServiceConnection`; RustFS com `GenericContainer` + `@DynamicPropertySource`; Awaitility pra esperar o assíncrono (A1, A2, A3, A5, A6, A8, A9) |
+| Integração | `@SpringBootTest` + Testcontainers | Postgres e Kafka com `@ServiceConnection`; RustFS com `GenericContainer` + `DynamicPropertyRegistrar`; Awaitility pra esperar o assíncrono (A1, A2, A3, A5, A6, A8, A9) |
 
 - Containers como beans numa `@TestConfiguration`
   (`support/TestcontainersConfiguration`), com as mesmas imagens do compose.
