@@ -65,6 +65,7 @@ conforme aparecem:
 | `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController`, `ingestion.controller.DocumentUploadController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
 | `health` | indicadores do `/actuator/health` | `infrastructure.storage.health.StorageHealthIndicator` |
+| `util` | funções puras usadas por mais de um domínio | `shared.util.ContentHasher` |
 
 Regra do ADR 0002: um pacote não usa o repositório de outro. `ingestion` e
 `indexing` mudam status só pelo `DocumentLifecycle`. É convenção de código,
@@ -301,14 +302,25 @@ Na implementação (T302):
 
 ## 8. Indexação (`DocumentIndexingService`)
 
-1. `claimForProcessing(documentId)`. Zero linhas → já `INDEXED`/`FAILED`
+1. `getById(documentId)`. Não existe → `DocumentNotFoundException` (não
+   retentável).
+2. `version` do evento diferente da do banco → log e sai, antes de assumir o
+   documento (preparado pra versões na fatia 4).
+3. `claimForProcessing(documentId)`. Zero linhas → já `INDEXED`/`FAILED`
    → log e sai (RF6).
-2. `version` do evento diferente da do banco → log e sai (preparado pra
-   versões na fatia 4).
-3. `DocumentIndexer.index(document)`: na fatia 1, o `ChecksumOnlyIndexer`
-   baixa o objeto, recalcula o SHA-256 e compara.
-4. Deu certo → `markIndexed`. Erro não retentável → `markFailed`. Erro
-   retentável → relança (o error handler do §7 cuida).
+4. `DocumentIndexer.index(document)`: na fatia 1, o `ChecksumOnlyIndexer`
+   baixa o objeto, recalcula o SHA-256 e compara
+   (`ChecksumMismatchException` se diferente).
+5. Deu certo → `markIndexed`. Qualquer erro sobe: o error handler do §7
+   decide entre tentar de novo e chamar `markFailed`, então o `FAILED` é
+   decidido num lugar só.
+
+Na implementação (T401): `IngestionConsumer` (`indexing.messaging`) com
+`@KafkaListener` no grupo `indexing`; consumidor com `ErrorHandlingDeserializer`
+em volta do `JacksonJsonDeserializer` (tipo fixo `DocumentUploadedEvent`, sem
+cabeçalho de tipo), `concurrency: 3` (uma thread por partição) e
+`ack-mode: record` (offset confirmado a cada mensagem processada). O
+`ContentHasher` foi pra `shared.util`, porque o upload e a indexação usam.
 
 ## 9. Storage
 

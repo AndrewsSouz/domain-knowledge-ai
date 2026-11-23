@@ -1,10 +1,12 @@
 package com.domainknowledge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.domainknowledge.document.repository.DocumentRepository;
 import com.domainknowledge.support.IntegrationTest;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,21 +47,23 @@ class DocumentApiIntegrationTest {
                 .build();
     }
 
+    /** A2 pelo HTTP: upload, e o {@code GET} do {@code Location} chega em {@code INDEXED} em até 10 s. */
     @Test
-    void uploadThenReadTheDocument() {
+    void uploadIsIndexedAndReadable() {
         ResponseEntity<String> created = upload(new ClassPathResource("fixtures/sample.pdf"), "regras.pdf");
 
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         URI location = created.getHeaders().getLocation();
         assertThat(location).isNotNull();
 
-        ResponseEntity<String> read = http.get().uri(location).retrieve().toEntity(String.class);
-        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode document = JSON.readTree(read.getBody());
-        assertThat(document.get("status").asString()).isEqualTo("QUEUED");
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            JsonNode current = JSON.readTree(http.get().uri(location).retrieve().body(String.class));
+            assertThat(current.get("status").asString()).isEqualTo("INDEXED");
+        });
+        JsonNode document = JSON.readTree(http.get().uri(location).retrieve().body(String.class));
         assertThat(document.get("title").asString()).isEqualTo("regras.pdf");
 
-        JsonNode page = JSON.readTree(http.get().uri("/v1/documents?status=QUEUED").retrieve().body(String.class));
+        JsonNode page = JSON.readTree(http.get().uri("/v1/documents?status=INDEXED").retrieve().body(String.class));
         assertThat(page.get("content").get(0).get("id").asString()).isEqualTo(document.get("id").asString());
     }
 

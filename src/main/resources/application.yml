@@ -39,6 +39,24 @@ spring:
         max.block.ms: 5000
         request.timeout.ms: 3000
         delivery.timeout.ms: 5000
+    consumer:
+      # Grupo novo começa do início do tópico: nada enviado antes da primeira
+      # subida fica pra trás.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # O ErrorHandlingDeserializer embrulha o JSON: mensagem malformada vira
+      # erro tratável em vez de travar a partição pra sempre.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        spring.json.value.default.type: com.domainknowledge.ingestion.model.DocumentUploadedEvent
+        spring.json.use.type.headers: false
+    listener:
+      # Um consumidor por partição do tópico (3).
+      concurrency: 3
+      # Confirma o offset de cada mensagem logo depois de processada: se a
+      # aplicação cair, só a mensagem em andamento é entregue de novo.
+      ack-mode: record
 
 server:
   tomcat:

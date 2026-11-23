@@ -1,4 +1,4 @@
-package com.domainknowledge.ingestion.service;
+package com.domainknowledge.shared.util;
 
 import java.io.IOException;
 import java.io.InputStream;

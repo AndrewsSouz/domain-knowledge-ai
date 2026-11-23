@@ -19,6 +19,7 @@ import com.domainknowledge.ingestion.model.DocumentType;
 import com.domainknowledge.ingestion.model.DocumentUploadedEvent;
 import com.domainknowledge.ingestion.model.UploadRequest;
 import com.domainknowledge.ingestion.model.UploadResult;
+import com.domainknowledge.shared.util.ContentHasher;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
