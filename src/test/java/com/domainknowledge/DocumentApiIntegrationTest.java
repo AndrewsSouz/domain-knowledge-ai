@@ -75,7 +75,9 @@ class DocumentApiIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
-        assertThat(JSON.readTree(response.getBody()).get("title").asString()).isEqualTo("Arquivo grande demais");
+        JsonNode problem = JSON.readTree(response.getBody());
+        assertThat(problem.get("title").asString()).isEqualTo("Arquivo grande demais");
+        assertThat(problem.get("detail").asString()).contains("20 MB");
         assertThat(repository.count()).isZero();
     }
 

@@ -33,4 +33,4 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   no storage, registra e publica.
 - API `POST /v1/documents` (202 novo ou reenfileirado, 200 duplicado),
   `GET /v1/documents/{id}` e `GET /v1/documents` paginado com filtro por
-  status; erros em Problem Details (400, 404, 413, 415, 503).
+  status; erros em Problem Details (400, 404, 413, 415, 500, 503).

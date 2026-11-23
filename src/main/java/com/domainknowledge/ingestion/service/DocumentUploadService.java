@@ -120,36 +120,42 @@ public class DocumentUploadService {
     }
 
     private DocumentType detectType(UploadRequest request) {
-        try (InputStream content = request.content().getInputStream()) {
-            return contentTypeDetector.detect(content, request.originalFilename())
-                    .orElseThrow(() -> new UnsupportedDocumentTypeException(request.originalFilename()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return readContent(request, content -> contentTypeDetector.detect(content, request.originalFilename()))
+                .orElseThrow(() -> new UnsupportedDocumentTypeException(request.originalFilename()));
     }
 
     private static String hash(UploadRequest request) {
-        try (InputStream content = request.content().getInputStream()) {
-            return ContentHasher.sha256(content);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return readContent(request, ContentHasher::sha256);
     }
 
     private void store(UploadRequest request, String storageKey, DocumentType type, String sha256) {
+        ObjectUpload upload = ObjectUpload.builder()
+                .key(storageKey)
+                .contentType(type.getMediaType())
+                .sizeBytes(request.sizeBytes())
+                .sha256(sha256)
+                .build();
+        readContent(request, content -> {
+            storage.put(upload, content);
+            return null;
+        });
+    }
+
+    /** Abre um stream novo do conteúdo, entrega pra {@code reader} e fecha. */
+    private static <T> T readContent(UploadRequest request, ContentReader<T> reader) {
         try (InputStream content = request.content().getInputStream()) {
-            storage.put(ObjectUpload.builder()
-                    .key(storageKey)
-                    .contentType(type.getMediaType())
-                    .sizeBytes(request.sizeBytes())
-                    .sha256(sha256)
-                    .build(), content);
+            return reader.read(content);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
+    @FunctionalInterface
+    private interface ContentReader<T> {
+        T read(InputStream content) throws IOException;
+    }
+
     private Document reload(UUID id) {
-        return documents.findById(id).orElseThrow();
+        return documents.getById(id);
     }
 }

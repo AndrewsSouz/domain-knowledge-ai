@@ -2,12 +2,11 @@ package com.domainknowledge.ingestion.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.domainknowledge.ingestion.IngestionFixtures;
 import com.domainknowledge.ingestion.model.DocumentUploadedEvent;
 import com.domainknowledge.support.IntegrationTest;
 import com.domainknowledge.support.TopicReader;
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class IngestionProducerIntegrationTest {
 
     @Test
     void publishesTheEventKeyedByDocumentId() {
-        DocumentUploadedEvent event = event();
+        DocumentUploadedEvent event = IngestionFixtures.uploadedEvent();
 
         producer.publish(event);
 
@@ -56,19 +55,5 @@ class IngestionProducerIntegrationTest {
         assertThat(json.get("storageKey").asString()).isEqualTo(event.storageKey());
         assertThat(json.get("contentType").asString()).isEqualTo("application/pdf");
         assertThat(json.get("sha256").asString()).isEqualTo(event.sha256());
-    }
-
-    private static DocumentUploadedEvent event() {
-        UUID documentId = UUID.randomUUID();
-        return DocumentUploadedEvent.builder()
-                .eventId(UUID.randomUUID())
-                .eventType(DocumentUploadedEvent.EVENT_TYPE)
-                .occurredAt(Instant.parse("2026-11-22T14:03:00Z"))
-                .documentId(documentId)
-                .version(1)
-                .storageKey("documents/" + documentId + "/v1/original.pdf")
-                .contentType("application/pdf")
-                .sha256("b".repeat(64))
-                .build();
     }
 }

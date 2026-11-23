@@ -1,7 +1,7 @@
 package com.domainknowledge.ingestion.service;
 
+import static com.domainknowledge.document.DocumentFixtures.documentIn;
 import static com.domainknowledge.document.model.DocumentStatus.FAILED;
-import static com.domainknowledge.document.model.DocumentStatus.INDEXED;
 import static com.domainknowledge.document.model.DocumentStatus.QUEUED;
 import static com.domainknowledge.document.model.DocumentStatus.RECEIVED;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,9 +37,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.ClassPathResource;
 
@@ -64,10 +65,10 @@ class DocumentUploadServiceTest {
 
     @Test
     void newDocumentIsStoredRegisteredPublishedAndQueued() throws IOException {
-        Document registered = document(RECEIVED);
+        Document registered = documentIn(RECEIVED);
         when(documents.findBySha256(anyString())).thenReturn(Optional.empty());
         when(lifecycle.register(any())).thenReturn(registered);
-        when(documents.findById(registered.getId())).thenReturn(Optional.of(registered));
+        when(documents.getById(registered.getId())).thenReturn(registered);
 
         UploadResult result = service.upload(request("sample.pdf", "regras.pdf", null));
 
@@ -95,10 +96,10 @@ class DocumentUploadServiceTest {
 
     @Test
     void usesTheGivenTitleWhenPresent() throws IOException {
-        Document registered = document(RECEIVED);
+        Document registered = documentIn(RECEIVED);
         when(documents.findBySha256(anyString())).thenReturn(Optional.empty());
         when(lifecycle.register(any())).thenReturn(registered);
-        when(documents.findById(registered.getId())).thenReturn(Optional.of(registered));
+        when(documents.getById(registered.getId())).thenReturn(registered);
 
         service.upload(request("sample.docx", "regras.docx", "  Regras completas  "));
 
@@ -122,26 +123,25 @@ class DocumentUploadServiceTest {
         verifyNoInteractions(storage, lifecycle, documents, producer);
     }
 
-    @Test
-    void duplicateAlreadyInPipelineIsReturnedWithoutPublishing() throws IOException {
-        for (DocumentStatus status : new DocumentStatus[] {QUEUED, DocumentStatus.PROCESSING, INDEXED}) {
-            Document existing = document(status);
-            when(documents.findBySha256(anyString())).thenReturn(Optional.of(existing));
+    @ParameterizedTest(name = "duplicado em {0}")
+    @EnumSource(value = DocumentStatus.class, names = {"QUEUED", "PROCESSING", "INDEXED"})
+    void duplicateAlreadyInPipelineIsReturnedWithoutPublishing(DocumentStatus status) throws IOException {
+        Document existing = documentIn(status);
+        when(documents.findBySha256(anyString())).thenReturn(Optional.of(existing));
 
-            UploadResult result = service.upload(request("sample.pdf", "regras.pdf", null));
+        UploadResult result = service.upload(request("sample.pdf", "regras.pdf", null));
 
-            assertThat(result).isEqualTo(new UploadResult.AlreadyExists(existing));
-        }
+        assertThat(result).isEqualTo(new UploadResult.AlreadyExists(existing));
         verifyNoInteractions(storage, producer);
         verify(lifecycle, never()).register(any());
     }
 
     @Test
     void failedDuplicateIsRequeuedWithoutStoringAgain() throws IOException {
-        Document existing = document(FAILED);
+        Document existing = documentIn(FAILED);
         when(documents.findBySha256(anyString())).thenReturn(Optional.of(existing));
         when(lifecycle.resetForRetry(existing.getId())).thenReturn(true);
-        when(documents.findById(existing.getId())).thenReturn(Optional.of(existing));
+        when(documents.getById(existing.getId())).thenReturn(existing);
 
         UploadResult result = service.upload(request("sample.pdf", "regras.pdf", null));
 
@@ -155,7 +155,7 @@ class DocumentUploadServiceTest {
 
     @Test
     void publishFailureLeavesTheDocumentReceived() throws IOException {
-        Document registered = document(RECEIVED);
+        Document registered = documentIn(RECEIVED);
         when(documents.findBySha256(anyString())).thenReturn(Optional.empty());
         when(lifecycle.register(any())).thenReturn(registered);
         doThrow(new EventPublishException(registered.getId(), new RuntimeException("broker fora")))
@@ -168,7 +168,7 @@ class DocumentUploadServiceTest {
 
     @Test
     void concurrentRegistrationOfTheSameFileIsTreatedAsDuplicate() throws IOException {
-        Document winner = document(QUEUED);
+        Document winner = documentIn(QUEUED);
         when(documents.findBySha256(anyString())).thenReturn(Optional.empty(), Optional.of(winner));
         when(lifecycle.register(any())).thenThrow(new DuplicateDocumentException("x", null));
 
@@ -186,12 +186,5 @@ class DocumentUploadServiceTest {
                 .sizeBytes(resource.contentLength())
                 .content(resource)
                 .build();
-    }
-
-    private static Document document(DocumentStatus status) {
-        Document document = mock(Document.class);
-        when(document.getId()).thenReturn(UUID.randomUUID());
-        when(document.getStatus()).thenReturn(status);
-        return document;
     }
 }

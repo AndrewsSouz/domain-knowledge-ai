@@ -26,8 +26,9 @@ Regras que guiam o desenho:
   referência (ADR 0004).
 - Producer e consumer são adaptadores finos; quem muda status é o serviço,
   pelo `DocumentLifecycle`.
-- Toda integração externa fica atrás de uma interface própria; trocar de
-  provedor não mexe na regra.
+- Storage e provedor de IA ficam atrás de uma interface própria; trocar de
+  provedor não mexe na regra. O Kafka fica atrás de adaptadores finos
+  (`IngestionProducer`, `IngestionConsumer`), sem interface.
 - No código, os domínios (`document`, `ingestion`, `indexing`, `query`) ficam
   no primeiro nível dos pacotes, e os clientes de sistemas externos (S3,
   provedor de IA) em `infrastructure/` (ADR 0002; detalhe no plan da
@@ -161,8 +162,9 @@ mensagem = `documentId` (garante ordem por documento na mesma partição).
 ## 6. Riscos conhecidos (registrados, resolvidos depois)
 
 - **Dual write (banco + Kafka):** se o insert der certo e o publish falhar, o
-  documento fica `RECEIVED` pra sempre. Fatia 1 aceita isso e deixa visível.
-  Fatia 4 resolve com **Transactional Outbox** (o evento é gravado numa
+  documento fica `RECEIVED` até o arquivo ser reenviado (RF2). Fatia 1 aceita
+  isso e deixa visível. Fatia 4 tira essa dependência com **Transactional
+  Outbox** (o evento é gravado numa
   tabela na mesma transação do documento, e um publicador separado manda pro
   Kafka).
 - **Entrega duplicada:** o Kafka garante "pelo menos uma vez". O consumidor

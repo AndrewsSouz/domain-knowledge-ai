@@ -6,8 +6,9 @@ create table document (
     original_filename varchar(255) not null,
     content_type      varchar(100) not null,
     size_bytes        bigint       not null,
-    -- SHA-256 do conteúdo em hexadecimal; o unique barra o mesmo arquivo duas vezes.
-    sha256            char(64)     not null unique,
+    -- SHA-256 do conteúdo em hexadecimal; o unique barra o mesmo arquivo duas
+    -- vezes. Nome explícito: a aplicação reconhece o duplicado por ele.
+    sha256            char(64)     not null constraint uk_document_sha256 unique,
     storage_key       varchar(512) not null,
     version           integer      not null default 1,
     status            varchar(20)  not null

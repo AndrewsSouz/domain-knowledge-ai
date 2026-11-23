@@ -3,12 +3,12 @@ package com.domainknowledge.ingestion.messaging;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.domainknowledge.ingestion.IngestionFixtures;
 import com.domainknowledge.ingestion.exception.EventPublishException;
 import com.domainknowledge.ingestion.model.DocumentUploadedEvent;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
@@ -30,19 +30,13 @@ class IngestionProducerTest {
         var factory = new DefaultKafkaProducerFactory<String, DocumentUploadedEvent>(
                 config, new StringSerializer(), new JacksonJsonSerializer<>());
         var producer = new IngestionProducer(new KafkaTemplate<>(factory));
-        UUID documentId = UUID.randomUUID();
-        DocumentUploadedEvent event = DocumentUploadedEvent.builder()
-                .eventId(UUID.randomUUID())
-                .eventType(DocumentUploadedEvent.EVENT_TYPE)
-                .occurredAt(Instant.now())
-                .documentId(documentId)
-                .build();
+        DocumentUploadedEvent event = IngestionFixtures.uploadedEvent();
 
         Instant start = Instant.now();
         try {
             assertThatThrownBy(() -> producer.publish(event))
                     .isInstanceOf(EventPublishException.class)
-                    .extracting("documentId").isEqualTo(documentId);
+                    .extracting("documentId").isEqualTo(event.documentId());
         } finally {
             factory.destroy();
         }

@@ -33,8 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DocumentLifecycle {
 
-    /** Nome que o Postgres dá ao {@code unique} de {@code sha256} na V1. */
-    private static final String SHA256_UNIQUE_CONSTRAINT = "document_sha256_key";
+    /** O {@code unique} de {@code sha256}, com nome explícito na V1. */
+    private static final String SHA256_UNIQUE_CONSTRAINT = "uk_document_sha256";
 
     /**
      * {@code RECEIVED}: o consumidor pode ser mais rápido que o upload gravar

@@ -45,8 +45,11 @@ Cada spec separa dois tipos:
   `service`, `repository`...). Tabela no plan da spec 001 §2.
 - Lombok pra getters; objetos criados por builder, inclusive `record`.
 - Um commit por task, com o build verde.
-- Integração externa (S3, Kafka, provedor de IA) fica atrás de uma interface;
-  a regra de negócio não importa SDK de fornecedor.
+- Storage e provedor de IA ficam atrás de uma interface nossa
+  (`ObjectStorage`, `EmbeddingIntegration`...); a regra de negócio não importa
+  SDK de fornecedor. O Kafka fica atrás de um adaptador por domínio
+  (`messaging`), sem interface: o `KafkaTemplate` já é a abstração do Spring,
+  e não há troca de broker prevista.
 - Provedores de IA têm implementação fake determinística; nenhum teste chama
   serviço pago e a aplicação sobe sem chave.
 - O Kafka leva referência ao arquivo, nunca o arquivo.

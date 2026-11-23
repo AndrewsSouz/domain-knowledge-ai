@@ -24,10 +24,6 @@ public class DocumentQueryService {
     /** Mais recentes primeiro; o id desempata, pra paginação não repetir nem pular linha. */
     private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.asc("id"));
 
-    public Optional<Document> findById(UUID id) {
-        return repository.findById(id);
-    }
-
     /** @throws DocumentNotFoundException se o id não existe */
     public Document getById(UUID id) {
         return repository.findById(id).orElseThrow(() -> new DocumentNotFoundException(id));

@@ -89,7 +89,9 @@ Recursos do Java 25 usados:
 
 - `record` para o evento, os DTOs e os resultados, criados por builder
   (`@Builder` do Lombok, ADR 0001).
-- `sealed interface UploadResult permits Accepted, AlreadyExists` e
+- `sealed interface UploadResult` com os records `Accepted` e
+  `AlreadyExists` aninhados (com os subtipos no mesmo arquivo, o `permits`
+  fica implícito) e
   `switch` com *pattern matching* no controller para escolher `202` ou `200`:
   o compilador obriga a tratar todos os casos.
 - *Virtual threads* (`spring.threads.virtual.enabled=true`): cada requisição
@@ -127,7 +129,9 @@ propriedade `spring.mvc.problemdetails.enabled` não é necessária. As do
 domínio: `EmptyFileException` → 400, `UnsupportedDocumentTypeException` →
 415, `MaxUploadSizeExceededException` → 413, `DocumentNotFoundException` →
 404, `EventPublishException` → 503 (com `documentId`), `StorageException`
-→ 503.
+→ 503. Qualquer outra exceção → 500, também em Problem Details, com mensagem
+genérica (o detalhe vai só pro log). A mensagem do 413 lê o limite de
+`spring.servlet.multipart.max-file-size`, sem repetir o número.
 
 Na implementação (T304):
 
@@ -153,7 +157,7 @@ create table document (
     original_filename varchar(255) not null,
     content_type      varchar(100) not null,
     size_bytes        bigint       not null,
-    sha256            char(64)     not null unique,
+    sha256            char(64)     not null constraint uk_document_sha256 unique,
     storage_key       varchar(512) not null,
     version           integer      not null default 1,
     status            varchar(20)  not null
@@ -204,7 +208,8 @@ Na implementação, as seis transições usam um `UPDATE` só no
 sempre escreve o `error_message`: ele só existe em `FAILED`, e toda saída de
 `FAILED` limpa o erro. Os métodos do `DocumentLifecycle` devolvem `boolean`
 (valeu ou não) e quem chama decide o que fazer. O `register` traduz a
-violação do `unique` de `sha256` (`document_sha256_key`) em
+violação do `unique` de `sha256` (`uk_document_sha256`, nome explícito na
+V1) em
 `DuplicateDocumentException`. O horário vem de um bean `Clock` (`shared`).
 
 ## 6. Upload, passo a passo (`DocumentUploadService`)
@@ -250,8 +255,9 @@ Na implementação (T303):
 - Sem `@Transactional` no serviço: cada passo do `DocumentLifecycle` é uma
   transação curta, e nenhuma transação do banco fica aberta esperando o
   Kafka.
-- Leituras do documento por um `DocumentQueryService` (`document.service`);
-  o `DocumentLifecycle` continua só com as mudanças.
+- Leituras do documento por um `DocumentQueryService` (`document.service`):
+  `getById` (lança `DocumentNotFoundException`), `findBySha256` e `list`; o
+  `DocumentLifecycle` continua só com as mudanças.
 - `ContentHasher` calcula o SHA-256 com `DigestInputStream`.
 - Corridas tratadas: `DuplicateDocumentException` no `register` vira
   duplicado; `resetForRetry` que não vale (outra requisição reenfileirou
@@ -383,6 +389,10 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   (`RANDOM_PORT`): o limite de upload só aparece passando pelo Tomcat de
   verdade, que o MockMvc não usa. Os `@WebMvcTest` cobrem o mapeamento de
   cada caso pra HTTP com os serviços como dublê.
+- Fixtures em código: `DocumentFixtures.documentIn(status)` monta um
+  `Document` de verdade (não um mock) no status pedido, e
+  `IngestionFixtures.uploadedEvent()` um evento completo. Entidade mockada é
+  frágil: getter não configurado devolve `null` sem avisar.
 - `support/TopicReader` lê um tópico do começo com um grupo novo e devolve
   as mensagens de uma chave; depois de achar o esperado, continua lendo 2 s
   pra pegar mensagem a mais (é assim que o A3 prova "um evento só").
@@ -406,5 +416,6 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   - Jackson 3 mudou de pacote (`tools.jackson` em vez de
     `com.fasterxml.jackson`).
 - **RustFS jovem:** plano B é o Adobe S3Mock (ADR 0005).
-- **RAM:** se o build com testes ficar lento, limitar o heap do daemon do
-  Gradle em `gradle.properties`.
+- **RAM:** o heap do daemon do Gradle já é limitado no `gradle.properties`
+  (`-Xmx768m`); os testes de integração rodam com o `docker compose`
+  parado.

@@ -6,11 +6,13 @@ import com.domainknowledge.ingestion.exception.EmptyFileException;
 import com.domainknowledge.ingestion.exception.EventPublishException;
 import com.domainknowledge.ingestion.exception.UnsupportedDocumentTypeException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -26,6 +28,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Slf4j
 @RestControllerAdvice
 class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    /** O mesmo limite que o multipart aplica, pra mensagem não mentir se ele mudar. */
+    private final DataSize maxFileSize;
+
+    ApiExceptionHandler(@Value("${spring.servlet.multipart.max-file-size}") DataSize maxFileSize) {
+        this.maxFileSize = maxFileSize;
+    }
 
     @ExceptionHandler(EmptyFileException.class)
     ProblemDetail emptyFile(EmptyFileException e) {
@@ -63,8 +72,19 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ProblemDetail problem = problem(HttpStatus.CONTENT_TOO_LARGE, "Arquivo grande demais",
-                "O arquivo passa do tamanho máximo aceito (20 MB).");
+                "O arquivo passa do tamanho máximo aceito (%d MB).".formatted(maxFileSize.toMegabytes()));
         return handleExceptionInternal(e, problem, headers, HttpStatus.CONTENT_TOO_LARGE, request);
+    }
+
+    /**
+     * Qualquer erro não previsto: 500, também em Problem Details, sem expor o
+     * detalhe interno. O erro completo vai pro log.
+     */
+    @ExceptionHandler(Exception.class)
+    ProblemDetail unexpected(Exception e) {
+        log.error("Erro inesperado", e);
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno",
+                "Algo deu errado do nosso lado. Tente de novo; se continuar, avise o suporte.");
     }
 
     private static ProblemDetail problem(HttpStatus status, String title, String detail) {

@@ -51,7 +51,8 @@ Fim do bloco: upload grava no storage, no banco e publica no Kafka.
   `documentId`.
 - [x] T303 (c2b1559) `DocumentUploadService` com o fluxo do plan §6 (duplicado,
   reenfileirar, falha na publicação) e o `UploadResult` selado. **A1, A3.**
-- [~] T304 `DocumentController` (`POST`, `GET` por id, `GET` paginado) e
+- [x] T304 (60bcaba) `DocumentUploadController` (`POST`), `DocumentController` (`GET` por id,
+  `GET` paginado) e
   `ApiExceptionHandler` com Problem Details. **A4, A7.**
 
 ## T4 — Consumo

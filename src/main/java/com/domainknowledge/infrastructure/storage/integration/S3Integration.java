@@ -57,13 +57,11 @@ class S3Integration implements ObjectStorage {
         try {
             s3Client.headObject(request -> request.bucket(properties.bucket()).key(key));
             return true;
-        } catch (S3Exception e) {
+        } catch (SdkException e) {
             // HEAD não tem corpo, então o "não existe" chega só como 404.
-            if (e.statusCode() == 404) {
+            if (e instanceof S3Exception s3 && s3.statusCode() == 404) {
                 return false;
             }
-            throw new StorageException("Falha ao consultar o storage: " + key, e);
-        } catch (SdkException e) {
             throw new StorageException("Falha ao consultar o storage: " + key, e);
         }
     }

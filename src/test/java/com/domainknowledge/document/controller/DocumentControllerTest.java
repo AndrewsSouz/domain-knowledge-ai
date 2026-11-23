@@ -1,17 +1,17 @@
 package com.domainknowledge.document.controller;
 
+import static com.domainknowledge.document.DocumentFixtures.documentIn;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.domainknowledge.document.DocumentFixtures;
 import com.domainknowledge.document.exception.DocumentNotFoundException;
 import com.domainknowledge.document.model.Document;
 import com.domainknowledge.document.model.DocumentStatus;
 import com.domainknowledge.document.service.DocumentQueryService;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -37,14 +37,14 @@ class DocumentControllerTest {
 
     @Test
     void returnsTheDocument() {
-        Document document = document(DocumentStatus.FAILED);
+        Document document = documentIn(DocumentStatus.FAILED);
         when(documents.getById(document.getId())).thenReturn(document);
 
         MvcTestResult result = mvc.get().uri("/v1/documents/{id}", document.getId()).exchange();
 
         assertThat(result).hasStatusOk();
         assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("FAILED");
-        assertThat(result).bodyJson().extractingPath("$.errorMessage").isEqualTo("hash diferente");
+        assertThat(result).bodyJson().extractingPath("$.errorMessage").isEqualTo(DocumentFixtures.ERROR_MESSAGE);
         assertThat(result).bodyJson().extractingPath("$.createdAt").isEqualTo("2026-11-22T14:03:00Z");
     }
 
@@ -67,7 +67,7 @@ class DocumentControllerTest {
 
     @Test
     void listsAPageFilteredByStatus() {
-        Document document = document(DocumentStatus.QUEUED);
+        Document document = documentIn(DocumentStatus.QUEUED);
         when(documents.list(DocumentStatus.QUEUED, 0, 20))
                 .thenReturn(new PageImpl<>(List.of(document), PageRequest.of(0, 20), 1));
 
@@ -92,14 +92,5 @@ class DocumentControllerTest {
         assertThat(mvc.get().uri("/v1/documents?status=DELETED").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(mvc.get().uri("/v1/documents?size=101").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(mvc.get().uri("/v1/documents?page=-1").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
-    }
-
-    private static Document document(DocumentStatus status) {
-        Document document = mock(Document.class);
-        when(document.getId()).thenReturn(UUID.randomUUID());
-        when(document.getStatus()).thenReturn(status);
-        when(document.getErrorMessage()).thenReturn(status == DocumentStatus.FAILED ? "hash diferente" : null);
-        when(document.getCreatedAt()).thenReturn(Instant.parse("2026-11-22T14:03:00Z"));
-        return document;
     }
 }
