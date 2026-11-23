@@ -383,6 +383,13 @@ Na implementação:
   (`spring.config.import: optional:file:.env[.properties]`), o mesmo que o
   compose lê, com padrão igual ao do compose; `./gradlew bootRun` funciona
   com ou sem `.env`.
+- **Demo (T502–T504):** roteiro em `docs/demo.http`. Pra D2 ter documento
+  na fila de verdade, a aplicação sobe com o consumidor desligado
+  (`spring.kafka.listener.auto-startup=false`, propriedade do Boot, sem
+  código), recebe o upload e cai; ao subir normal, o consumidor do grupo
+  `indexing` continua do offset confirmado. Logo depois da subida, o
+  consumidor leva alguns segundos pra receber as partições (entrada no
+  grupo), e o documento fica `QUEUED` nesse intervalo.
 
 ## 11. docker-compose.yml
 
