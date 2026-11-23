@@ -70,9 +70,9 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
 
 ## T5 — Operação, demo e fechamento
 
-- [x] T501 `documentId` no MDC dos dois lados, padrão de log,
+- [x] T501 (4b9f77a) `documentId` no MDC dos dois lados, padrão de log,
   `KafkaHealthIndicator`, exposição do `/actuator/health`. (RNF3, RNF4)
-- [ ] T502 `docs/demo.http` e a seção "Como rodar" do README.
+- [x] T502 `docs/demo.http` e a seção "Como rodar" do README.
 - [ ] T503 **D1:** subir do zero, fazer upload pelo `demo.http`, ver
   `QUEUED` → `INDEXED` e o arquivo no console do RustFS.
 - [ ] T504 **D2:** derrubar a aplicação com documento na fila, subir

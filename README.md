@@ -57,6 +57,21 @@ docker compose up -d          # PostgreSQL, Kafka e storage S3
 | PostgreSQL | `localhost:5432`, banco `dka` |
 | Kafka | `localhost:9092` |
 
+### Demo
+
+O roteiro está em [docs/demo.http](docs/demo.http), pra extensão
+[REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+do VS Code: upload, acompanhamento do status até `INDEXED`, duplicado,
+listagem e os erros (tipo não aceito, arquivo vazio, id inexistente).
+
+O corpus da demo são as Comprehensive Rules de Magic: The Gathering
+(veja [docs/visao.md](docs/visao.md)). Baixe o PDF em
+<https://magic.wizards.com/en/rules> e salve como
+`docs/corpus/comprehensive-rules.pdf` (a pasta fica fora do git).
+
+Pra começar do zero, `docker compose down -v` apaga os dados do banco, do
+Kafka e do storage.
+
 Testes (unitários e de integração com Testcontainers):
 
 ```bash

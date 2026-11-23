@@ -1,0 +1,118 @@
+# Roteiro da demo da fatia 1 (ingestão).
+#
+# Feito pra extensão REST Client do VS Code (humao.rest-client): cada bloco
+# separado por ### é uma requisição, com "Send Request" em cima. As
+# requisições com "# @name" guardam a resposta, e as seguintes usam o id dela.
+#
+# Antes:
+#   docker compose up -d
+#   ./gradlew bootRun
+#
+# Corpus da demo: as Comprehensive Rules de Magic: The Gathering, em PDF,
+# baixadas de https://magic.wizards.com/en/rules e salvas como
+# docs/corpus/comprehensive-rules.pdf (a pasta fica fora do git).
+#
+# Os caminhos dos arquivos (< ...) são relativos a este arquivo.
+
+@baseUrl = http://localhost:8080
+
+### 1. Saúde da aplicação: banco, Kafka e storage, cada um com o seu status.
+GET {{baseUrl}}/actuator/health
+
+### 2. Upload das Comprehensive Rules.
+# Esperado: 202, status QUEUED e o header Location apontando pro documento.
+# Se o arquivo já tinha subido antes, 200 com o mesmo id (duplicado).
+# @name rules
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="title"
+
+Comprehensive Rules
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="comprehensive-rules.pdf"
+Content-Type: application/pdf
+
+< ./corpus/comprehensive-rules.pdf
+--dka-boundary--
+
+### 3. Status do documento: repetir até aparecer INDEXED.
+# Com a aplicação no ar há algum tempo, leva menos de 1 s. Logo depois da
+# subida, pode levar uns 10 s: o consumidor ainda está entrando no grupo do
+# Kafka (o log mostra "partitions assigned").
+GET {{baseUrl}}/v1/documents/{{rules.response.body.$.id}}
+
+### 4. Upload de um PDF pequeno, sem título (o título vira o nome do arquivo).
+# 202 na primeira vez; se ele já subiu antes, 200.
+# @name sample
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ../src/test/resources/fixtures/sample.pdf
+--dka-boundary--
+
+### 5. O mesmo arquivo de novo: 200, mesmo id, nenhum evento novo no Kafka.
+# A detecção é pelo SHA-256 do conteúdo, não pelo nome.
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="outro-nome.pdf"
+Content-Type: application/pdf
+
+< ../src/test/resources/fixtures/sample.pdf
+--dka-boundary--
+
+### 6. DOCX também é aceito.
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="sample.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ../src/test/resources/fixtures/sample.docx
+--dka-boundary--
+
+### 7. Listagem paginada, mais recentes primeiro.
+GET {{baseUrl}}/v1/documents?page=0&size=20
+
+### 8. Listagem filtrada por status.
+GET {{baseUrl}}/v1/documents?status=INDEXED
+
+### 9. Texto com extensão .pdf: 415. O tipo vem do conteúdo, não do nome
+# nem do Content-Type que o cliente manda.
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="fake.pdf"
+Content-Type: application/pdf
+
+< ../src/test/resources/fixtures/fake.pdf
+--dka-boundary--
+
+### 10. Arquivo vazio: 400.
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="empty.pdf"
+Content-Type: application/pdf
+
+< ../src/test/resources/fixtures/empty.pdf
+--dka-boundary--
+
+### 11. Id que não existe: 404 em Problem Details.
+GET {{baseUrl}}/v1/documents/00000000-0000-0000-0000-000000000000
+
+### 12. Status inválido no filtro: 400.
+GET {{baseUrl}}/v1/documents?status=DESCONHECIDO
+
+# Acima de 20 MB a resposta é 413; está coberto pelos testes automáticos
+# (critério A4), sem arquivo grande no repositório.

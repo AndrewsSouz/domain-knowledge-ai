@@ -42,3 +42,5 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   travar a partição.
 - `documentId` em todas as linhas de log do fluxo, dos dois lados do Kafka
   (MDC); Kafka no `/actuator/health`, com o status de cada componente.
+- Roteiro da demo (`docs/demo.http`, REST Client do VS Code) e seção "Demo"
+  no README, com o download do corpus.
