@@ -117,6 +117,10 @@ Automáticos (viram teste):
 - **A7** `GET` de id inexistente → `404` em Problem Details.
 - **A8** Kafka fora do ar no upload → `503`, documento `RECEIVED`; com o
   Kafka de volta, reenviar o arquivo → `202` e o fluxo termina em `INDEXED`.
+  Se o evento de uma tentativa com `503` tiver chegado ao broker mesmo assim
+  (timeout no producer não garante que a mensagem não foi entregue), o
+  documento já termina `INDEXED` e o reenvio responde `200`; os dois casos
+  valem.
 - **A9** Documento `FAILED` reenviado → volta pra fila e termina `INDEXED`.
 
 Demo (roteiro manual):

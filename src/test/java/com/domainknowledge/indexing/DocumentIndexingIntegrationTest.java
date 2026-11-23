@@ -18,6 +18,7 @@ import com.domainknowledge.shared.util.ContentHasher;
 import com.domainknowledge.support.IntegrationTest;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -30,9 +31,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaAdmin;
 
-/** O consumidor leva o documento até o fim do ciclo de vida (A2, A6, RF7). */
+/** O consumidor leva o documento até o fim do ciclo de vida (A2, A5, A6, RF6, RF7). */
 @IntegrationTest
 class DocumentIndexingIntegrationTest {
 
@@ -55,6 +57,9 @@ class DocumentIndexingIntegrationTest {
 
     @Autowired
     KafkaAdmin kafkaAdmin;
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void cleanTable() {
@@ -126,6 +131,44 @@ class DocumentIndexingIntegrationTest {
                 assertThat(repository.findById(id).orElseThrow().getStatus()).isEqualTo(DocumentStatus.FAILED));
         assertThat(repository.findById(id).orElseThrow().getErrorMessage())
                 .startsWith("SHA-256 diferente do registrado no upload");
+    }
+
+    /**
+     * A5: evento de documento já {@code INDEXED} é ignorado. Nada muda, nem o
+     * {@code updatedAt}, durante a janela em que o consumidor já teria
+     * processado.
+     */
+    @Test
+    void eventOfIndexedDocumentIsIgnored() throws IOException {
+        UUID id = UUID.randomUUID();
+        Document document = register(id, "fixtures/sample.pdf");
+        Instant longAgo = Instant.parse("2026-01-01T00:00:00Z");
+        jdbcTemplate.update("update document set status = 'INDEXED', updated_at = ? where id = ?",
+                Timestamp.from(longAgo), id);
+
+        publish(document);
+
+        await().during(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(4)).untilAsserted(() -> {
+            Document current = repository.findById(id).orElseThrow();
+            assertThat(current.getStatus()).isEqualTo(DocumentStatus.INDEXED);
+            assertThat(current.getUpdatedAt()).isEqualTo(longAgo);
+        });
+    }
+
+    /**
+     * A5 e RF6: documento parado em {@code PROCESSING} (a aplicação caiu no
+     * meio) é processado de novo quando o evento volta, e termina em
+     * {@code INDEXED}.
+     */
+    @Test
+    void eventOfDocumentStuckInProcessingIsProcessedAgain() throws IOException {
+        UUID id = UUID.randomUUID();
+        Document document = register(id, "fixtures/sample.pdf");
+        jdbcTemplate.update("update document set status = 'PROCESSING' where id = ?", id);
+
+        publish(document);
+
+        awaitStatus(id, DocumentStatus.INDEXED);
     }
 
     /**

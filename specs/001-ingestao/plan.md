@@ -409,6 +409,15 @@ Meta: menos de 1,5 GB somando os três. Medido na T003, ocioso: ≈ 435 MB
   página) e `sample.docx` (pacote OOXML mínimo), os dois com o mesmo texto
   curto e extraível; `fake.pdf` (texto com extensão `.pdf`); `empty.pdf`
   (0 bytes). Menos de 1 KB cada.
+- Indexação (T401–T403): `DocumentIndexingIntegrationTest` monta cada
+  cenário registrando o documento e publicando o evento à mão (objeto
+  ausente, hash diferente, documento já `INDEXED` ou parado em
+  `PROCESSING`); "sem retentativa" é provado pelo tempo (`FAILED` em menos
+  de 4 s, contra mais de 7 s com os retries); "ignorado" com
+  `await().during(3 s)`. A8 (`KafkaOutageIntegrationTest`) pausa o container
+  do Kafka de verdade (`docker pause`) durante o upload e despausa no fim.
+  Como o consumidor roda em todos os testes de integração, eles esperam o
+  estado final em vez de conferir `QUEUED`.
 - `@IntegrationTest` sobe o servidor numa porta aleatória
   (`RANDOM_PORT`): o limite de upload só aparece passando pelo Tomcat de
   verdade, que o MockMvc não usa. Os `@WebMvcTest` cobrem o mapeamento de

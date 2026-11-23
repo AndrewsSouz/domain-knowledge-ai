@@ -167,6 +167,12 @@ mensagem = `documentId` (garante ordem por documento na mesma partição).
   Outbox** (o evento é gravado numa
   tabela na mesma transação do documento, e um publicador separado manda pro
   Kafka).
+- **Timeout não é "não entregue":** quando o producer desiste por timeout,
+  a mensagem pode ter chegado ao broker mesmo assim. O upload responde `503`
+  e o documento fica `RECEIVED`, mas o consumidor pode receber o evento e
+  assumir o documento direto de `RECEIVED` (por isso essa transição existe).
+  Visto de verdade no teste do A8, com o Kafka pausado; o outbox da fatia 4
+  também resolve isso.
 - **Entrega duplicada:** o Kafka garante "pelo menos uma vez". O consumidor
   ignora evento de documento que já está `INDEXED` ou `FAILED` naquela
   versão; em `PROCESSING` ele processa de novo (a aplicação pode ter caído no

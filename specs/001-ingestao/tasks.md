@@ -62,9 +62,11 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
 - [x] T401 (2f2dc17) `IngestionConsumer`, `DocumentIndexingService`,
   `DocumentIndexer` + `ChecksumOnlyIndexer`. Deserializer à prova de mensagem
   malformada. **A2.**
-- [x] T402 Error handler: backoff 1/2/4 s, exceções não retentáveis,
+- [x] T402 (1b2c6b2) Error handler: backoff 1/2/4 s, exceções não retentáveis,
   recoverer marcando `FAILED`. **A6.**
-- [ ] T403 Idempotência e recuperação. **A5, A8, A9.**
+- [x] T403 Idempotência e recuperação. **A5, A8, A9.** A5 em
+  `DocumentIndexingIntegrationTest`; A8 em `KafkaOutageIntegrationTest`
+  (Kafka pausado de verdade); A9 em `DocumentUploadServiceIntegrationTest`.
 
 ## T5 — Operação, demo e fechamento
 
