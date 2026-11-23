@@ -77,8 +77,10 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
   `QUEUED` → `INDEXED` e o arquivo no console do RustFS. *Confirmado em
   23/11/2026: compose zerado, requisições 1 a 12 com as respostas esperadas,
   arquivo no console do storage.*
-- [ ] T504 **D2:** derrubar a aplicação com documento na fila, subir
-  de novo e ver o documento terminar.
+- [x] T504 (6733d1f) **D2:** derrubar a aplicação com documento na fila, subir
+  de novo e ver o documento terminar. *Confirmado em 23/11/2026: parte 2 do
+  `demo.http` (consumidor desligado, upload `QUEUED`, aplicação fora com a
+  mensagem no tópico, `INDEXED` ao subir de novo).*
 - [ ] T505 Revisão de coerência (spec, plan, tasks, roadmap, estado,
   CHANGELOG), `VERSION` e Gradle em 0.1.0, spec com `implementacao: "0.1.0"`.
   Tag `v0.1.0`.
