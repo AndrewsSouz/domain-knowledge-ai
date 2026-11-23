@@ -13,7 +13,7 @@ de desenvolvimento comum.
 
 Uma aplicação Spring Boot, com pacotes por domínio (`document`,
 `ingestion`, `indexing`, `query`) e, separado deles, `infrastructure` com um
-pacote por sistema externo (`storage`, `ai`). O Kafka já separa o lado
+pacote por sistema externo (`storage`, `kafka`, `ai`). O Kafka já separa o lado
 síncrono do assíncrono **dentro** do mesmo processo. Regra: um pacote não
 acessa o repositório de outro direto, só pelo serviço público dele.
 

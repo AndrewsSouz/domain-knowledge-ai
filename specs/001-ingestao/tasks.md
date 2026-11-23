@@ -70,7 +70,7 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
 
 ## T5 — Operação, demo e fechamento
 
-- [ ] T501 `documentId` no MDC dos dois lados, padrão de log,
+- [x] T501 `documentId` no MDC dos dois lados, padrão de log,
   `KafkaHealthIndicator`, exposição do `/actuator/health`. (RNF3, RNF4)
 - [ ] T502 `docs/demo.http` e a seção "Como rodar" do README.
 - [ ] T503 **D1:** subir do zero, fazer upload pelo `demo.http`, ver

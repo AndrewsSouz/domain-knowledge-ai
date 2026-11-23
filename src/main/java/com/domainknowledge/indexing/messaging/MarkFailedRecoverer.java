@@ -1,6 +1,7 @@
 package com.domainknowledge.indexing.messaging;
 
 import com.domainknowledge.document.service.DocumentLifecycle;
+import com.domainknowledge.shared.util.LogContext;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +43,14 @@ public class MarkFailedRecoverer implements ConsumerRecordRecoverer {
             return;
         }
         String reason = reasonOf(exception);
-        if (lifecycle.markFailed(documentId, reason)) {
-            log.warn("Documento {} marcado FAILED: {}", documentId, reason, exception);
-        } else {
-            log.warn("Falha no documento {} sem mudar o status (não estava em PROCESSING): {}",
-                    documentId, reason, exception);
+        // O recoverer roda fora do listener: o documentId volta pro MDC aqui.
+        try (var logContext = LogContext.documentId(documentId)) {
+            if (lifecycle.markFailed(documentId, reason)) {
+                log.warn("Documento marcado FAILED: {}", reason, exception);
+            } else {
+                log.warn("Falha sem mudar o status (o documento não estava em PROCESSING): {}",
+                        reason, exception);
+            }
         }
     }
 

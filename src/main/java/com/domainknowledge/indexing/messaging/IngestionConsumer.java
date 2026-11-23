@@ -2,6 +2,7 @@ package com.domainknowledge.indexing.messaging;
 
 import com.domainknowledge.indexing.service.DocumentIndexingService;
 import com.domainknowledge.ingestion.model.DocumentUploadedEvent;
+import com.domainknowledge.shared.util.LogContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -19,7 +20,9 @@ class IngestionConsumer {
 
     @KafkaListener(topics = DocumentUploadedEvent.TOPIC, groupId = GROUP_ID)
     void onDocumentUploaded(DocumentUploadedEvent event) {
-        log.info("Evento {} recebido para o documento {}", event.eventId(), event.documentId());
-        indexingService.index(event);
+        try (var logContext = LogContext.documentId(event.documentId())) {
+            log.info("Evento {} recebido", event.eventId());
+            indexingService.index(event);
+        }
     }
 }

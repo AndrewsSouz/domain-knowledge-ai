@@ -38,8 +38,8 @@ public class IngestionProducer {
                     .send(DocumentUploadedEvent.TOPIC, event.documentId().toString(), event)
                     .get(PUBLISH_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
                     .getRecordMetadata();
-            log.info("Evento {} do documento {} publicado na partição {}, offset {}",
-                    event.eventId(), event.documentId(), metadata.partition(), metadata.offset());
+            log.info("Evento {} publicado na partição {}, offset {}",
+                    event.eventId(), metadata.partition(), metadata.offset());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new EventPublishException(event.documentId(), e);

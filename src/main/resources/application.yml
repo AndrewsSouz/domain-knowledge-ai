@@ -58,6 +58,21 @@ spring:
       # aplicação cair, só a mensagem em andamento é entregue de novo.
       ack-mode: record
 
+management:
+  endpoint:
+    health:
+      # Mostra o status de cada componente (banco, Kafka, storage). Os detalhes
+      # (bucket, id do cluster...) ficam escondidos até ter autenticação
+      # (fatia 4): não se expõe a infraestrutura pra qualquer um.
+      show-components: always
+      show-details: when-authorized
+
+logging:
+  pattern:
+    # [documentId] depois do nível, quando a linha é do fluxo de um documento
+    # (MDC, RNF3); sem documento, não aparece nada.
+    level: "%5p%replace( [%X{documentId}]){' \\[\\]', ''}"
+
 server:
   tomcat:
     # Acima do limite, a aplicação responde 413, mas o Tomcat ainda precisa ler

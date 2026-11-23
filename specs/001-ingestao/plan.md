@@ -39,6 +39,7 @@ domain-knowledge-ai/
     │   ├── ingestion/     # lado síncrono: upload e publicação
     │   ├── indexing/      # lado assíncrono: consumo e processamento
     │   ├── infrastructure/
+    │   │   ├── kafka/     # admin client e health do cluster
     │   │   └── storage/   # S3 (fatia 2: ai/, cliente do Gemini)
     │   └── shared/        # config (Clock), erros (Problem Details), logs (MDC)
     ├── main/resources/
@@ -361,13 +362,23 @@ Na implementação:
 
 ## 10. Operação
 
-- **Logs:** `documentId` no MDC; no controller depois de gerar o id, no
-  consumer antes de processar, limpo no `finally`. Padrão de log com
-  `%X{documentId}`.
+- **Logs:** `documentId` no MDC (`shared.util.LogContext`, com
+  try-with-resources: sai do MDC no fim do bloco, mesmo com exceção). Do lado
+  do upload, no `DocumentUploadService`, que é quem gera o id (o controller
+  não conhece o id antes); do lado do Kafka, no `IngestionConsumer` e no
+  `MarkFailedRecoverer`, que roda fora do listener. Padrão
+  `logging.pattern.level: %5p%replace( [%X{documentId}]){' \[\]', ''}`:
+  `[id]` depois do nível, e nada quando a linha não é de um documento. As
+  mensagens não repetem o id.
 - **Health:** `/actuator/health` com banco (padrão do Boot),
   `StorageHealthIndicator` (`headBucket` com timeout de 3 s; aparece como
   `storage`) e `KafkaHealthIndicator`
-  (`describeCluster` com timeout de 3 s; o Boot não traz um pronto).
+  (`describeCluster` com timeout de 3 s; o Boot não traz um pronto), em
+  `infrastructure.kafka.health`, com um `AdminClient` único
+  (`infrastructure.kafka.config`) reaproveitado a cada checagem. Exposição:
+  `show-components: always` (status de cada componente) e
+  `show-details: when-authorized` (detalhes como bucket e id do cluster ficam
+  escondidos até ter autenticação, na fatia 4).
 - **Configuração:** `application.yml` importa o `.env` da raiz
   (`spring.config.import: optional:file:.env[.properties]`), o mesmo que o
   compose lê, com padrão igual ao do compose; `./gradlew bootRun` funciona

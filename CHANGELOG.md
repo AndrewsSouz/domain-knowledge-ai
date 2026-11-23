@@ -40,3 +40,5 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   inesperado; arquivo sumido, hash diferente ou documento inexistente vão
   direto pra `FAILED` com o motivo; mensagem malformada é descartada sem
   travar a partição.
+- `documentId` em todas as linhas de log do fluxo, dos dois lados do Kafka
+  (MDC); Kafka no `/actuator/health`, com o status de cada componente.

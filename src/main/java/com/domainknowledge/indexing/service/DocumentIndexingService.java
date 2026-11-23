@@ -27,19 +27,19 @@ public class DocumentIndexingService {
         Document document = documents.getById(event.documentId());
         if (document.getVersion() != event.version()) {
             // Evento de outra versão do documento (fatia 4). Na fatia 1 não acontece.
-            log.warn("Evento da versão {} ignorado: o documento {} está na versão {}",
-                    event.version(), document.getId(), document.getVersion());
+            log.warn("Evento da versão {} ignorado: o documento está na versão {}",
+                    event.version(), document.getVersion());
             return;
         }
         // Só assume se estiver em RECEIVED, QUEUED ou PROCESSING (RF6): INDEXED e
         // FAILED ficam como estão; PROCESSING é o caso da aplicação que caiu no meio.
         if (!lifecycle.claimForProcessing(document.getId())) {
-            log.info("Evento do documento {} ignorado: já está {}", document.getId(), document.getStatus());
+            log.info("Evento ignorado: o documento já está {}", document.getStatus());
             return;
         }
         indexer.index(document);
         if (lifecycle.markIndexed(document.getId())) {
-            log.info("Documento {} indexado", document.getId());
+            log.info("Documento indexado");
         }
     }
 }

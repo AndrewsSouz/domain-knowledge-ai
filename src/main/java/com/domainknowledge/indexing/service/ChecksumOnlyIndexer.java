@@ -34,6 +34,6 @@ class ChecksumOnlyIndexer implements DocumentIndexer {
         if (!actual.equals(document.getSha256())) {
             throw new ChecksumMismatchException(document.getId(), document.getSha256(), actual);
         }
-        log.info("Documento {} conferido: SHA-256 bate com o do upload", document.getId());
+        log.info("SHA-256 bate com o do upload");
     }
 }

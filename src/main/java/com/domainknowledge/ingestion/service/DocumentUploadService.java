@@ -20,6 +20,7 @@ import com.domainknowledge.ingestion.model.DocumentUploadedEvent;
 import com.domainknowledge.ingestion.model.UploadRequest;
 import com.domainknowledge.ingestion.model.UploadResult;
 import com.domainknowledge.shared.util.ContentHasher;
+import com.domainknowledge.shared.util.LogContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -73,10 +74,19 @@ public class DocumentUploadService {
 
         Optional<Document> existing = documents.findBySha256(sha256);
         if (existing.isPresent()) {
-            return handleDuplicate(existing.get());
+            try (var logContext = LogContext.documentId(existing.get().getId())) {
+                return handleDuplicate(existing.get());
+            }
         }
 
         UUID id = UUID.randomUUID();
+        try (var logContext = LogContext.documentId(id)) {
+            return storeRegisterAndEnqueue(request, id, type, sha256);
+        }
+    }
+
+    private UploadResult storeRegisterAndEnqueue(UploadRequest request, UUID id, DocumentType type, String sha256) {
+        String filename = request.originalFilename();
         String storageKey = "documents/%s/v1/original.%s".formatted(id, type.getExtension());
         store(request, storageKey, type, sha256);
 
@@ -94,22 +104,24 @@ public class DocumentUploadService {
         } catch (DuplicateDocumentException e) {
             // Outra requisição com o mesmo arquivo registrou primeiro. O objeto
             // que gravamos acima fica órfão (inofensivo).
-            log.info("Upload concorrente do mesmo arquivo; usando o documento já registrado");
-            return handleDuplicate(documents.findBySha256(sha256).orElseThrow());
+            Document winner = documents.findBySha256(sha256).orElseThrow();
+            log.info("Upload concorrente do mesmo arquivo; usando o documento {}, já registrado", winner.getId());
+            return handleDuplicate(winner);
         }
+        log.info("Documento registrado: {} ({} bytes)", filename, request.sizeBytes());
         return enqueue(document);
     }
 
     private UploadResult handleDuplicate(Document existing) {
         if (!REQUEUEABLE.contains(existing.getStatus())) {
-            log.info("Documento {} já existe em {}; nada publicado", existing.getId(), existing.getStatus());
+            log.info("Arquivo já enviado; o documento está {} e nada foi publicado", existing.getStatus());
             return new UploadResult.AlreadyExists(existing);
         }
         if (!lifecycle.resetForRetry(existing.getId())) {
             // Outra requisição reenfileirou entre a leitura e agora.
             return new UploadResult.AlreadyExists(reload(existing.getId()));
         }
-        log.info("Documento {} em {} reenviado; voltando pra fila", existing.getId(), existing.getStatus());
+        log.info("Arquivo reenviado com o documento em {}; voltando pra fila", existing.getStatus());
         return enqueue(reload(existing.getId()));
     }
 
