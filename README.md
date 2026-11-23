@@ -5,8 +5,8 @@ RAG corporativo em Java e Spring Boot: funcionários sobem documentos internos
 conteúdo, e qualquer pessoa autorizada pergunta em linguagem natural e recebe
 a resposta **com as fontes**.
 
-> **Status:** em construção, fatia 1 de 5 (ingestão). Veja o
-> [roadmap](docs/roadmap.md).
+> **Status:** em construção. Fatia 1 de 5 (ingestão) entregue na 0.1.0;
+> a próxima é a indexação. Veja o [roadmap](docs/roadmap.md).
 
 ## Como funciona
 

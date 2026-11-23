@@ -5,7 +5,7 @@ Cada fatia termina em algo que roda ponta a ponta e vira um MINOR. Testes,
 
 | Fatia | Spec | Versão | Entrega | Status |
 | --- | --- | --- | --- | --- |
-| 1. Ingestão | 001 | 0.1.0 | Upload → storage S3 → Postgres → Kafka → consumidor muda status. O indexador ainda é um stub que baixa o arquivo e confere o hash. | em andamento |
+| 1. Ingestão | 001 | 0.1.0 | Upload → storage S3 → Postgres → Kafka → consumidor muda status. O indexador ainda é um stub que baixa o arquivo e confere o hash. | entregue |
 | 2. Indexação | 002 | 0.2.0 | Extração (Tika), chunking, embeddings, pgvector, `INDEXED`. | — |
 | 3. Consulta RAG | 003 | 0.3.0 | Pergunta → trechos → LLM → resposta com fontes. Primeira versão demonstrável, com GIF no README. | — |
 | 4. Segurança e resiliência | 004 | 0.4.0 | Autenticação, permissão por documento e nos chunks, outbox, retry/DLQ, backoff pra 429, reprocessar `FAILED` sem reenviar o arquivo (endpoint ou automático), nova versão de documento. | — |

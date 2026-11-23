@@ -81,6 +81,6 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
   de novo e ver o documento terminar. *Confirmado em 23/11/2026: parte 2 do
   `demo.http` (consumidor desligado, upload `QUEUED`, aplicação fora com a
   mensagem no tópico, `INDEXED` ao subir de novo).*
-- [ ] T505 Revisão de coerência (spec, plan, tasks, roadmap, estado,
+- [x] T505 Revisão de coerência (spec, plan, tasks, roadmap, estado,
   CHANGELOG), `VERSION` e Gradle em 0.1.0, spec com `implementacao: "0.1.0"`.
   Tag `v0.1.0`.

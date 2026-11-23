@@ -3,10 +3,10 @@ id: "001"
 slug: ingestao
 titulo: "Fatia 1 — Ingestão funcional"
 versao: "1.0.0"
-status: aprovada
+status: congelada
 criada_em: 2026-11-22
-revisada_em: 2026-11-22
-implementacao: "—"
+revisada_em: 2026-11-23
+implementacao: "0.1.0"
 ---
 
 > Escopo da fatia 1 do `docs/roadmap.md`. Alterações de escopo sobem a versão

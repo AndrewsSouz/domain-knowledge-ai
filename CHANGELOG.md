@@ -5,6 +5,10 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-23
+
+Fatia 1: ingestão ponta a ponta (spec 001), com indexador stub.
+
 ### Adicionado
 
 - Documentação: visão, arquitetura, roadmap e ADRs 0001 a 0006.
