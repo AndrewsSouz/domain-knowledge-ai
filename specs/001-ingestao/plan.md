@@ -56,13 +56,13 @@ conforme aparecem:
 
 | Subpacote | O que vai | Exemplo |
 | --- | --- | --- |
-| `model` | entidades, enums, records de dados | `document.model.Document`, `NewDocument` |
+| `model` | entidades, enums e records de dados (POJOs), inclusive os DTOs de resposta da API | `document.model.Document`, `NewDocument`, `DocumentResponse` |
 | `exception` | exceções do domínio | `document.exception.DuplicateDocumentException` |
 | `repository` | Spring Data | `document.repository.DocumentRepository` |
 | `service` | regras, orquestração e interfaces que o resto da aplicação usa | `document.service.DocumentLifecycle`, `infrastructure.storage.service.ObjectStorage` |
 | `integration` | clientes de sistemas externos (o `*Integration` do esboço) | `infrastructure.storage.integration.S3Integration` |
 | `messaging` | producer e consumer do Kafka de um domínio | `ingestion.messaging.IngestionProducer` |
-| `controller` | endpoints HTTP e DTOs de resposta | `document.controller.DocumentController`, `ingestion.controller.DocumentUploadController` |
+| `controller` | endpoints HTTP (só os controllers e o tratamento de erro) | `document.controller.DocumentController`, `ingestion.controller.DocumentUploadController` |
 | `config` | `@Configuration` e propriedades | `shared.config.ClockConfiguration` |
 | `health` | indicadores do `/actuator/health` | `infrastructure.storage.health.StorageHealthIndicator` |
 | `util` | funções puras usadas por mais de um domínio | `shared.util.ContentHasher` |

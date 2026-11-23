@@ -1,5 +1,6 @@
 package com.domainknowledge.document.controller;
 
+import com.domainknowledge.document.model.DocumentResponse;
 import com.domainknowledge.document.model.DocumentStatus;
 import com.domainknowledge.document.service.DocumentQueryService;
 import jakarta.validation.constraints.Max;

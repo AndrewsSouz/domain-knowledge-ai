@@ -1,6 +1,6 @@
 package com.domainknowledge.ingestion.controller;
 
-import com.domainknowledge.document.controller.DocumentResponse;
+import com.domainknowledge.document.model.DocumentResponse;
 import com.domainknowledge.ingestion.model.UploadRequest;
 import com.domainknowledge.ingestion.model.UploadResult;
 import com.domainknowledge.ingestion.service.DocumentUploadService;

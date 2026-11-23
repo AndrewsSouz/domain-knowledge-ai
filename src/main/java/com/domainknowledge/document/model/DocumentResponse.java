@@ -1,7 +1,5 @@
-package com.domainknowledge.document.controller;
+package com.domainknowledge.document.model;
 
-import com.domainknowledge.document.model.Document;
-import com.domainknowledge.document.model.DocumentStatus;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Builder;

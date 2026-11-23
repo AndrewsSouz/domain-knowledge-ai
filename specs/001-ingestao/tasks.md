@@ -64,7 +64,7 @@ Fim do bloco: o fluxo completo termina em `INDEXED`.
   malformada. **A2.**
 - [x] T402 (1b2c6b2) Error handler: backoff 1/2/4 s, exceções não retentáveis,
   recoverer marcando `FAILED`. **A6.**
-- [x] T403 Idempotência e recuperação. **A5, A8, A9.** A5 em
+- [x] T403 (4198d16) Idempotência e recuperação. **A5, A8, A9.** A5 em
   `DocumentIndexingIntegrationTest`; A8 em `KafkaOutageIntegrationTest`
   (Kafka pausado de verdade); A9 em `DocumentUploadServiceIntegrationTest`.
 
