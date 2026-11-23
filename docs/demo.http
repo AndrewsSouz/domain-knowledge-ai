@@ -8,9 +8,12 @@
 #   docker compose up -d
 #   ./gradlew bootRun
 #
-# Corpus da demo: as Comprehensive Rules de Magic: The Gathering, em PDF,
-# baixadas de https://magic.wizards.com/en/rules e salvas como
-# docs/corpus/comprehensive-rules.pdf (a pasta fica fora do git).
+# Corpus da demo: as Comprehensive Rules de Magic: The Gathering, baixadas
+# de https://magic.wizards.com/en/rules e salvas como
+# docs/corpus/comprehensive-rules.pdf e docs/corpus/comprehensive-rules.docx
+# (a pasta fica fora do git).
+#
+# Parte 1 (D1): requisições 1 a 12. Parte 2 (D2): no fim do arquivo.
 #
 # Os caminhos dos arquivos (< ...) são relativos a este arquivo.
 
@@ -116,3 +119,44 @@ GET {{baseUrl}}/v1/documents?status=DESCONHECIDO
 
 # Acima de 20 MB a resposta é 413; está coberto pelos testes automáticos
 # (critério A4), sem arquivo grande no repositório.
+
+# ---------------------------------------------------------------------------
+# Parte 2: o Kafka guarda o pedido enquanto a aplicação está fora (D2).
+#
+# Pra ter um documento na fila de verdade, a aplicação sobe com o consumidor
+# desligado: o upload grava, registra e publica, mas ninguém consome.
+#
+#   1. Parar a aplicação (Ctrl+C) e subir assim:
+#        ./gradlew bootRun --args='--spring.kafka.listener.auto-startup=false'
+#   2. Mandar o upload 13 (a versão DOCX das regras, baixada como
+#      docs/corpus/comprehensive-rules.docx) e conferir no 14 que ele fica
+#      QUEUED.
+#   3. Parar a aplicação (Ctrl+C). Com ela fora, a mensagem continua no
+#      tópico, com a chave = documentId:
+#        docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
+#          --bootstrap-server localhost:9092 --topic document-uploaded \
+#          --from-beginning --formatter-property print.key=true --timeout-ms 5000
+#      (o ERROR no fim é só o timeout do console consumer.)
+#   4. Subir normal (./gradlew bootRun) e repetir o 14: INDEXED, assim que o
+#      log mostrar "partitions assigned".
+# ---------------------------------------------------------------------------
+
+### 13. Upload com o consumidor desligado: 202, QUEUED.
+# @name rulesDocx
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data; boundary=dka-boundary
+
+--dka-boundary
+Content-Disposition: form-data; name="title"
+
+Comprehensive Rules (DOCX)
+--dka-boundary
+Content-Disposition: form-data; name="file"; filename="comprehensive-rules.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ./corpus/comprehensive-rules.docx
+--dka-boundary--
+
+### 14. Status do DOCX: QUEUED com o consumidor desligado, INDEXED depois de
+# subir a aplicação normal.
+GET {{baseUrl}}/v1/documents/{{rulesDocx.response.body.$.id}}
