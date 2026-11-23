@@ -59,10 +59,10 @@ Fim do bloco: upload grava no storage, no banco e publica no Kafka.
 
 Fim do bloco: o fluxo completo termina em `INDEXED`.
 
-- [x] T401 `IngestionConsumer`, `DocumentIndexingService`,
+- [x] T401 (2f2dc17) `IngestionConsumer`, `DocumentIndexingService`,
   `DocumentIndexer` + `ChecksumOnlyIndexer`. Deserializer à prova de mensagem
   malformada. **A2.**
-- [ ] T402 Error handler: backoff 1/2/4 s, exceções não retentáveis,
+- [x] T402 Error handler: backoff 1/2/4 s, exceções não retentáveis,
   recoverer marcando `FAILED`. **A6.**
 - [ ] T403 Idempotência e recuperação. **A5, A8, A9.**
 

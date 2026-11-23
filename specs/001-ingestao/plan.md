@@ -322,6 +322,18 @@ cabeçalho de tipo), `concurrency: 3` (uma thread por partição) e
 `ack-mode: record` (offset confirmado a cada mensagem processada). O
 `ContentHasher` foi pra `shared.util`, porque o upload e a indexação usam.
 
+Erros (T402): `DefaultErrorHandler` em `indexing.config`, ligado pelo Boot ao
+container. `ExponentialBackOffWithMaxRetries(3)` com 1 s inicial e
+multiplicador 2 (1 s, 2 s, 4 s). Não retentáveis:
+`StorageObjectNotFoundException`, `ChecksumMismatchException` e
+`DocumentNotFoundException` (evento de documento que não existe). O
+`MarkFailedRecoverer` (`indexing.messaging`) tira o `documentId` da chave e
+chama `markFailed` com a mensagem da exceção do listener (até 1000
+caracteres); mensagem malformada (`DeserializationException`) só vai pro log.
+`commitRecovered=true`: o offset da mensagem recuperada é confirmado na hora.
+A espera do retry acontece na thread da partição: as mensagens de trás
+esperam, e a ordem por documento se mantém.
+
 ## 9. Storage
 
 - `S3Client` do AWS SDK v2 com `endpointOverride`, `forcePathStyle(true)`

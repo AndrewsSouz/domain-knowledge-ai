@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.kafka.core.KafkaAdmin;
 
-/** O consumidor leva o documento até o fim do ciclo de vida (critério A2). */
+/** O consumidor leva o documento até o fim do ciclo de vida (A2, A6, RF7). */
 @IntegrationTest
 class DocumentIndexingIntegrationTest {
 
@@ -92,29 +92,74 @@ class DocumentIndexingIntegrationTest {
             throw new IllegalStateException(e);
         }
 
-        Document document = storedAndRegistered(id);
-        producer.publish(DocumentUploadedEvent.of(document, Instant.now()));
+        publish(register(id, "fixtures/sample.pdf"));
 
         awaitStatus(id, DocumentStatus.INDEXED);
     }
 
-    /** Grava o sample.pdf no storage e registra o documento, como o upload faria. */
-    private Document storedAndRegistered(UUID id) throws IOException {
+    /**
+     * A6: o objeto sumiu do storage antes do consumo → {@code FAILED} com a
+     * mensagem, sem retentativa. Com retentativa (1 s + 2 s + 4 s) levaria
+     * mais de 7 s; sem ela, chega em bem menos.
+     */
+    @Test
+    void missingObjectFailsWithoutRetrying() throws IOException {
+        UUID id = UUID.randomUUID();
+        publish(register(id, null));
+
+        await().atMost(Duration.ofSeconds(4)).untilAsserted(() ->
+                assertThat(repository.findById(id).orElseThrow().getStatus()).isEqualTo(DocumentStatus.FAILED));
+        assertThat(repository.findById(id).orElseThrow().getErrorMessage())
+                .startsWith("Objeto não encontrado no storage: documents/" + id);
+    }
+
+    /** RF7: o arquivo no storage não é o que subiu (hash diferente) → {@code FAILED}, sem retentativa. */
+    @Test
+    void checksumMismatchFailsWithoutRetrying() throws IOException {
+        UUID id = UUID.randomUUID();
+        // Registrado com o hash do sample.pdf, mas o objeto gravado é outro arquivo.
+        Document document = register(id, "fixtures/sample.pdf");
+        overwriteObject(document.getStorageKey(), "fixtures/fake.pdf");
+        publish(document);
+
+        await().atMost(Duration.ofSeconds(4)).untilAsserted(() ->
+                assertThat(repository.findById(id).orElseThrow().getStatus()).isEqualTo(DocumentStatus.FAILED));
+        assertThat(repository.findById(id).orElseThrow().getErrorMessage())
+                .startsWith("SHA-256 diferente do registrado no upload");
+    }
+
+    /**
+     * Registra um documento com o hash do sample.pdf, como o upload faria.
+     *
+     * @param objectFixture o que gravar no storage; {@code null} não grava nada
+     */
+    private Document register(UUID id, String objectFixture) throws IOException {
         ClassPathResource pdf = new ClassPathResource("fixtures/sample.pdf");
         String sha256;
         try (InputStream in = pdf.getInputStream()) {
             sha256 = ContentHasher.sha256(in);
         }
         String key = "documents/" + id + "/v1/original.pdf";
-        try (InputStream in = pdf.getInputStream()) {
-            storage.put(ObjectUpload.builder()
-                    .key(key).contentType("application/pdf").sizeBytes(pdf.contentLength()).sha256(sha256)
-                    .build(), in);
+        if (objectFixture != null) {
+            overwriteObject(key, objectFixture);
         }
         return lifecycle.register(NewDocument.builder()
                 .id(id).title("regras").originalFilename("regras.pdf").contentType("application/pdf")
                 .sizeBytes(pdf.contentLength()).sha256(sha256).storageKey(key)
                 .build());
+    }
+
+    private void overwriteObject(String key, String fixture) throws IOException {
+        ClassPathResource content = new ClassPathResource(fixture);
+        try (InputStream in = content.getInputStream()) {
+            storage.put(ObjectUpload.builder()
+                    .key(key).contentType("application/pdf").sizeBytes(content.contentLength()).sha256("-")
+                    .build(), in);
+        }
+    }
+
+    private void publish(Document document) {
+        producer.publish(DocumentUploadedEvent.of(document, Instant.now()));
     }
 
     private void awaitStatus(UUID id, DocumentStatus status) {

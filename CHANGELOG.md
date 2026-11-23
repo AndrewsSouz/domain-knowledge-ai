@@ -36,3 +36,7 @@ versão em `VERSION`. Organização do projeto em `docs/sdd.md`.
   status; erros em Problem Details (400, 404, 413, 415, 500, 503).
 - Consumidor do `document-uploaded`: assume o documento, confere o SHA-256
   do original no storage e marca `INDEXED` (indexador stub da fatia 1).
+- Falha na indexação: até 3 novas tentativas (1 s, 2 s, 4 s) pra erro
+  inesperado; arquivo sumido, hash diferente ou documento inexistente vão
+  direto pra `FAILED` com o motivo; mensagem malformada é descartada sem
+  travar a partição.
